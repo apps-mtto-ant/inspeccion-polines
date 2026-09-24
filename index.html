@@ -165,6 +165,12 @@ nav.tabs button[aria-current="page"]::before{content:"";position:absolute;top:0;
 .eqname{font-weight:600;display:flex;align-items:baseline;gap:6px}
 .eqname .m{font-weight:500;font-size:12px;color:var(--muted)}
 .eqin{width:84px;text-align:center;padding:8px 6px}
+.cfg-card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+.cfg-card h3{font-family:var(--cond);font-weight:700;font-size:19px;margin:0 0 2px;color:var(--steel)}
+.cfg-card .tag2{font-size:12px;color:var(--muted);margin-bottom:8px}
+.cfg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.cfg-f label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.cfg-f input{width:100%;border:1.5px solid var(--line);border-radius:6px;padding:7px 6px;text-align:center;font-family:var(--cond);font-size:17px;font-weight:700;background:#fff}
 .check{display:flex;align-items:center;gap:10px;font-weight:600;min-height:44px}
 .check input{width:22px;height:22px}
 
@@ -222,7 +228,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
 <header class="top">
   <div class="top-row">
     <div class="brand">Polines<small>Inspección y cambio · Mtto Cátodos</small></div>
-    <span class="tag">Maqueta v0.5</span>
+    <span class="tag">Maqueta v0.6</span>
   </div>
 </header>
 
@@ -324,7 +330,6 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
     <div class="panel">
       <h2>Datos</h2>
       <div class="seg">
-        <button class="secondary" id="edit-eq">Editar máximos de equipos</button>
         <button class="secondary" id="export">Descargar CSV formato planilla</button>
         <button class="secondary" id="demo-on">Cargar datos demo</button>
         <button class="secondary" id="demo-off">Quitar datos demo</button>
@@ -339,6 +344,28 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
       <h2>Catálogo de modos de falla</h2>
       <p class="hint" style="margin:0 0 8px">Fuente: Registro de Polines v4. La criticidad sugerida es una propuesta para validar con el especialista.</p>
       <ul class="cat" id="cat"></ul>
+    </div>
+  </section>
+
+  <!-- CONFIGURACIÓN -->
+  <section class="view" id="v-config" aria-label="Configuración">
+    <div class="panel" id="cfg-lock">
+      <h2>Configuración protegida</h2>
+      <p class="hint">Ingresa la clave para editar la cantidad de estaciones, mesas y polines por equipo.</p>
+      <input class="field" id="cfg-pin" type="password" inputmode="numeric" maxlength="5" placeholder="Clave" style="margin-top:10px">
+      <button class="primary" id="cfg-unlock" style="margin-top:10px">Entrar</button>
+    </div>
+    <div id="cfg-body" hidden>
+      <p class="demo-note">Estos datos quedan solo en este teléfono. Cuando estén listos, expórtalos y compártelos para dejarlos fijos en la app.</p>
+      <div class="panel">
+        <h2>Exportar</h2>
+        <div class="seg">
+          <button class="secondary" id="cfg-copy">Copiar JSON</button>
+          <button class="secondary" id="cfg-csv">Descargar CSV</button>
+        </div>
+      </div>
+      <div id="cfg-list"></div>
+      <button class="link" id="cfg-lock-again" style="display:block;margin:6px auto 0">Bloquear configuración</button>
     </div>
   </section>
 </main>
@@ -357,6 +384,9 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
     <button data-v="v-cat">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>
       Fallas</button>
+    <button data-v="v-config">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Config</button>
   </div>
 </nav>
 
@@ -396,14 +426,20 @@ const TAGS = {
 // Clave única de equipo = área + código (hay FEE001/FEE002 repetidos entre áreas y dentro de Chancado)
 const POR_MESA = new Set(['CV012','CV017','CV018','CV019','CV020']);
 const MAX_MESAS = 40, MAX_EST = 300; // techo provisorio por defecto, hasta confirmar cada equipo
-const EQKEY='polines_maqueta_eqmax_v1';
-let EQMAX={};
-function loadEqmax(){try{const s=localStorage.getItem(EQKEY); EQMAX=s?JSON.parse(s):{};}catch(e){EQMAX={};}}
-function saveEqmax(){try{localStorage.setItem(EQKEY,JSON.stringify(EQMAX));}catch(e){}}
+const CFGKEY='polines_maqueta_config_v1';
+let CONFIG={}; let CFG_UNLOCKED=false;
+function loadConfig(){try{const s=localStorage.getItem(CFGKEY); CONFIG=s?JSON.parse(s):{};}catch(e){CONFIG={};}}
+function saveConfig(){try{localStorage.setItem(CFGKEY,JSON.stringify(CONFIG));}catch(e){}}
+function cfgFor(area,correa){return CONFIG[area+'|'+correa]||{};}
 function eqMaxFor(area,correa){
-  const v=EQMAX[area+'|'+correa];
-  const fallback=POR_MESA.has(correa)?MAX_MESAS:MAX_EST;
-  return {max:(v&&v>0)?v:fallback, confirmed:!!(v&&v>0)};
+  const c=cfgFor(area,correa);
+  if(POR_MESA.has(correa)){const v=+c.mesas||0; return {max:v>0?v:MAX_MESAS, confirmed:v>0};}
+  const sum=['carga','guia','impacto','retV','retRecto','cabezal','stringer'].reduce((s,k)=>s+(+c[k]>0?+c[k]:0),0);
+  return {max:sum>0?sum:MAX_EST, confirmed:sum>0};
+}
+function mesaSlots(area,correa){
+  const c=cfgFor(area,correa);
+  return {carga:(+c.cargaPorMesa>0?+c.cargaPorMesa:5), retorno:(+c.retornoPorMesa>0?+c.retornoPorMesa:2)};
 }
 
 const TIPOS = [
@@ -582,14 +618,14 @@ function stepper(id,label,val,min,max){
   <input id="${id}" inputmode="numeric" pattern="[0-9]*" value="${val}" data-min="${min}" data-max="${max}">
   <button type="button" data-step="${id}" data-d="1" aria-label="Sumar">+</button></div></div>`;
 }
-function maxNest(){const t=tipoDe(S.tipo);return t&&t.letra==='R'?2:5;}
+function maxNest(){const t=tipoDe(S.tipo);const slots=mesaSlots(S.area,S.correa);return t&&t.letra==='R'?slots.retorno:slots.carga;}
 function renderUbic(){
   const p=$('#p-ubic'); const ok=showStationFlow(); p.hidden=!ok; if(!ok)return;
   const eq=eqMaxFor(S.area,S.correa);
   if(esMesa()){
     $('#nums').innerHTML=stepper('in-mesa','Mesa',S.mesa,1,eq.max)+stepper('in-nest','N° estación en la mesa',S.nest,1,maxNest());
     $('#ubic-hint').textContent=eq.confirmed
-      ?`Correa confirmada: ${eq.max} mesas en total. Carga 1 a 5 y retorno 1 a 2 por mesa (por confirmar).`
+      ?`Correa confirmada: ${eq.max} mesas en total. Carga 1 a ${mesaSlots(S.area,S.correa).carga} y retorno 1 a ${mesaSlots(S.area,S.correa).retorno} por mesa.`
       :`Cantidad de mesas provisoria (${eq.max}) hasta confirmar el total real de esta correa.`;
   }else{
     $('#nums').innerHTML=stepper('in-est','N° de estación',S.est,1,eq.max);
@@ -910,31 +946,6 @@ function renderMapa(){
 $('#m-correa').addEventListener('change',renderMapa);
 $('#m-que').addEventListener('change',renderMapa);
 
-$('#edit-eq').addEventListener('click',()=>{
-  F=null;
-  openSheet(`<div class="sheet-head"><div><div class="pid" id="sh-pid">Máximos por equipo</div><div class="sub">Mesas o estaciones totales de cada correa</div></div><button class="close" data-eq="close" aria-label="Cerrar">×</button></div>
-  <p class="hint" style="margin-top:8px">Vacío = provisorio. Escribe el número real cuando lo confirmes en terreno; el mapa de calor y el tope del formulario se ajustan solos, sin tocar los demás equipos.</p>
-  ${Object.entries(AREAS).map(([a,cs])=>`
-  <div class="block"><span class="lbl">${esc(a)}</span>
-  ${cs.map(c=>{
-    const key=a+'|'+c; const v=EQMAX[key]||''; const mesa=POR_MESA.has(c);
-    return `<div class="eqrow"><span class="eqname">${esc(c)}<span class="m">${mesa?'mesas':'estaciones'}</span></span><input class="field eqin" type="number" min="1" max="999" inputmode="numeric" data-key="${esc(key)}" value="${v}" placeholder="${mesa?MAX_MESAS:MAX_EST}"></div>`;
-  }).join('')}
-  </div>`).join('')}
-  <button class="primary" data-eq="save">Guardar máximos</button>`);
-});
-$('#sheet').addEventListener('click',e=>{
-  const b=e.target.closest('[data-eq]'); if(!b)return;
-  if(b.dataset.eq==='close'){closeSheet();return;}
-  if(b.dataset.eq==='save'){
-    document.querySelectorAll('.eqin').forEach(inp=>{
-      const key=inp.dataset.key; const v=parseInt(inp.value,10);
-      if(v>0)EQMAX[key]=v; else delete EQMAX[key];
-    });
-    saveEqmax(); closeSheet(); renderUbic(); renderAreas(); renderMapa();
-    toast('Máximos actualizados');
-  }
-});
 
 /* Demo */
 function rnd(seed){let s=seed;return ()=>{s=(s*16807)%2147483647;return (s-1)/2147483646;};}
@@ -988,6 +999,58 @@ function renderCat(){
   `<li class="prop"><div class="h"><span class="c">MF-21</span><span class="t">Cadena con defecto de diseño del proveedor</span><span class="lvl">Propuesta</span></div><p>Separar de MF-19 para poder respaldar reclamos de garantía. Pendiente de validar con el especialista.</p></li>`;
 }
 
+/* ================= Configuración ================= */
+const CFG_PIN='01234';
+const FIELDS_EST=[['carga','Carga'],['guia','Guía'],['impacto','Impacto'],['retV','Retorno V'],['retRecto','Retorno recto'],['cabezal','Cabezal'],['stringer','Stringer']];
+const FIELDS_MESA=[['mesas','N° mesas'],['cargaPorMesa','Carga/mesa'],['retornoPorMesa','Retorno/mesa']];
+function renderConfig(){
+  $('#cfg-lock').hidden=CFG_UNLOCKED;
+  $('#cfg-body').hidden=!CFG_UNLOCKED;
+  if(CFG_UNLOCKED)renderConfigList(); else $('#cfg-pin').value='';
+}
+function renderConfigList(){
+  $('#cfg-list').innerHTML=Object.entries(AREAS).map(([a,cs])=>`
+    <div class="panel"><h2>${esc(a)}</h2>
+    ${cs.map(c=>{
+      const key=a+'|'+c; const cur=CONFIG[key]||{}; const mesa=POR_MESA.has(c);
+      const fields=mesa?FIELDS_MESA:FIELDS_EST;
+      return `<div class="cfg-card"><h3>${esc(c)}</h3><div class="tag2">${esc(TAGS[key]||'')} · ${mesa?'por mesa':'por estación'}</div>
+      <div class="cfg-grid">${fields.map(([k,l])=>`<div class="cfg-f"><label for="cfg-${esc(key)}-${k}">${esc(l)}</label><input id="cfg-${esc(key)}-${k}" class="cfg-in" data-key="${esc(key)}" data-field="${k}" type="number" min="0" max="999" inputmode="numeric" value="${cur[k]??''}" placeholder="${k==='cargaPorMesa'?'5':k==='retornoPorMesa'?'2':'—'}"></div>`).join('')}</div></div>`;
+    }).join('')}
+    </div>`).join('');
+}
+$('#cfg-unlock').addEventListener('click',()=>{
+  if($('#cfg-pin').value===CFG_PIN){CFG_UNLOCKED=true;renderConfig();}
+  else{toast('Clave incorrecta');$('#cfg-pin').value='';}
+});
+$('#cfg-pin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#cfg-unlock').click();});
+$('#cfg-lock-again').addEventListener('click',()=>{CFG_UNLOCKED=false;renderConfig();});
+$('#cfg-list').addEventListener('change',e=>{
+  const t=e.target; if(!t.classList.contains('cfg-in'))return;
+  const key=t.dataset.key, field=t.dataset.field, v=parseInt(t.value,10);
+  CONFIG[key]=CONFIG[key]||{};
+  if(v>0)CONFIG[key][field]=v; else delete CONFIG[key][field];
+  if(!Object.keys(CONFIG[key]).length)delete CONFIG[key];
+  saveConfig(); renderUbic(); renderAreas(); renderMapa();
+});
+$('#cfg-copy').addEventListener('click',async()=>{
+  const txt=JSON.stringify(CONFIG,null,2);
+  try{await navigator.clipboard.writeText(txt); toast('JSON copiado, pégalo en el chat');}
+  catch(e){ toast('No se pudo copiar; descarga el CSV'); }
+});
+$('#cfg-csv').addEventListener('click',()=>{
+  const H=['ÁREA','EQUIPO','TAG','TIPO','MESAS','CARGA_POR_MESA','RETORNO_POR_MESA','CARGA','GUIA','IMPACTO','RETORNO_V','RETORNO_RECTO','CABEZAL','STRINGER'];
+  const rows=[];
+  Object.entries(AREAS).forEach(([a,cs])=>cs.forEach(c=>{
+    const key=a+'|'+c; const cur=CONFIG[key]||{}; const mesa=POR_MESA.has(c);
+    rows.push([a,c,TAGS[key]||'',mesa?'MESA':'ESTACION',cur.mesas??'',cur.cargaPorMesa??'',cur.retornoPorMesa??'',cur.carga??'',cur.guia??'',cur.impacto??'',cur.retV??'',cur.retRecto??'',cur.cabezal??'',cur.stringer??'']);
+  }));
+  const csv='\ufeff'+[H,...rows].map(a=>a.map(v=>{v=String(v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(';')).join('\r\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='Config_Equipos_Polines.csv'; document.body.appendChild(a); a.click(); a.remove();
+  toast('CSV descargado');
+});
+
 /* ================= Navegación ================= */
 document.querySelector('nav.tabs').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b)return;
@@ -997,13 +1060,14 @@ document.querySelector('nav.tabs').addEventListener('click',e=>{
   window.scrollTo(0,0);
   if(b.dataset.v==='v-pend')renderPend();
   if(b.dataset.v==='v-mapa')renderMapa();
+  if(b.dataset.v==='v-config')renderConfig();
 });
 
 function renderAll(){renderTask();renderAreas();renderOrigen();renderCambioPend();renderUbic();renderTipos();renderStation();numberPanels();}
 function refreshAll(){renderAll();renderPend();renderMapa();updateBadge();}
 
 load();
-loadEqmax();
+loadConfig();
 correaOptions($('#f-correa'),'Todos los equipos');
 correaOptions($('#m-correa'),null); $('#m-correa').value='Ripios|CV020';
 renderCat(); refreshAll();
