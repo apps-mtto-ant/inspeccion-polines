@@ -209,7 +209,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
 <header class="top">
   <div class="top-row">
     <div class="brand">Polines<small>Inspección y cambio · Mtto Cátodos</small></div>
-    <span class="tag">Maqueta v0.2</span>
+    <span class="tag">Maqueta v0.3</span>
   </div>
 </header>
 
@@ -336,12 +336,29 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
 'use strict';
 /* ================= Maestros ================= */
 const AREAS = {
-  'Chancado': ['CV001','CV002','CV003','FEE001 (G1)','FEE002 (G1)','FEE003 (G1)','CV005','CV006','CV007',
-               'FEE001 (G2)','FEE002 (G2)','FEE003 (G2)','FEE004','FEE005','FEE006','FEE007','FEE008','FEE009','FEE010','FEE011','FEE012','CV010'],
-  'Aglomerado': ['FEE001','FEE002','CV011'],
-  'Apilamiento': ['CV012','TC001','CV013','TC002','CV014'],
-  'Ripios': ['CV015','HC001','CV016','HC002','CV017','CV018','CV019','CV020','TC003','CV021','CV022']
+  'Chancado Primario':   ['CV001','CV002','CV003'],
+  'Chancado Secundario': ['FEE001','FEE002','FEE003','CV004','CV005','CV006','CV007'],
+  'Chancado Terciario':  ['FEE001','FEE002','FEE003','FEE004','FEE005','FEE006','FEE007','FEE008','FEE009','FEE010','FEE011','FEE012','CV010'],
+  'Aglomerado':          ['FEE001','FEE002'],
+  'Apilamiento':         ['CV011','CV012','TC001','CV013','TC002','CV014'],
+  'Ripios':              ['CV015','HC001','CV016','HC002','CV017','CV018','CV019','CV020','TC003','CV021','CV022']
 };
+const TAGS = {
+  'Chancado Primario|CV001':'2120-CV001-C01','Chancado Primario|CV002':'2120-CV002-C01','Chancado Primario|CV003':'2120-CV003-C01',
+  'Chancado Secundario|FEE001':'2210-FEE001-C01','Chancado Secundario|FEE002':'2210-FEE002-C01','Chancado Secundario|FEE003':'2210-FEE003-C01',
+  'Chancado Secundario|CV004':'2220-CV004-C01','Chancado Secundario|CV005':'2220-CV005-C01','Chancado Secundario|CV006':'2220-CV006-C01','Chancado Secundario|CV007':'2220-CV007-C01',
+  'Chancado Terciario|FEE001':'2310-FEE001-C01','Chancado Terciario|FEE002':'2310-FEE002-C01','Chancado Terciario|FEE003':'2310-FEE003-C01','Chancado Terciario|FEE004':'2310-FEE004-C01',
+  'Chancado Terciario|FEE005':'2310-FEE005-C01','Chancado Terciario|FEE006':'2310-FEE006-C01','Chancado Terciario|FEE007':'2310-FEE007-C01','Chancado Terciario|FEE008':'2310-FEE008-C01',
+  'Chancado Terciario|FEE009':'2310-FEE009-C01','Chancado Terciario|FEE010':'2310-FEE010-C01','Chancado Terciario|FEE011':'2310-FEE011-C01','Chancado Terciario|FEE012':'2310-FEE012-C01',
+  'Chancado Terciario|CV010':'2320-CV010-C01',
+  'Aglomerado|FEE001':'3130-FEE001-C01','Aglomerado|FEE002':'3130-FEE002-C01',
+  'Apilamiento|CV011':'3210-CV011-C02','Apilamiento|CV012':'3210-CV012-C02','Apilamiento|TC001':'3210-TC001-C02',
+  'Apilamiento|CV013':'3220-CV013-C02','Apilamiento|TC002':'3230-TC002-C02','Apilamiento|CV014':'3230-CV014-C02',
+  'Ripios|CV015':'3310-CV015-C02','Ripios|HC001':'3320-HC001-C02','Ripios|CV016':'3320-CV016-C02','Ripios|HC002':'3330-HC002-C02',
+  'Ripios|CV017':'3330-CV017-C02','Ripios|CV018':'3330-CV018-C02','Ripios|CV019':'3330-CV019-C02','Ripios|CV020':'3330-CV020-C02',
+  'Ripios|TC003':'3340-TC003-C02','Ripios|CV021':'3340-CV021-C02','Ripios|CV022':'3340-CV022-C02'
+};
+// Clave única de equipo = área + código (FEE001/FEE002/FEE003 se repiten entre las 4 áreas de Chancado/Aglomerado)
 // Clave única de equipo = área + código (hay FEE001/FEE002 repetidos entre áreas y dentro de Chancado)
 const POR_MESA = new Set(['CV012','CV017','CV018','CV019','CV020']);
 const MAX_MESAS = 40, MAX_EST = 300; // provisorio hasta tener el maestro real
@@ -444,7 +461,7 @@ const esMesa=()=>POR_MESA.has(S.correa);
 
 function renderAreas(){
   $('#areas').innerHTML=Object.keys(AREAS).map(a=>`<button aria-pressed="${S.area===a}" data-a="${esc(a)}">${esc(a)}</button>`).join('');
-  $('#correas').innerHTML=S.area?AREAS[S.area].map(c=>`<button class="chip" aria-pressed="${S.correa===c}" data-c="${esc(c)}">${esc(c.replace(/ \(G\d\)/,''))}<span class="m">${/\(G(\d)\)/.test(c)?'grupo '+c.match(/\(G(\d)\)/)[1]:POR_MESA.has(c)?'por mesa':'por estación'}</span></button>`).join(''):'';
+  $('#correas').innerHTML=S.area?AREAS[S.area].map(c=>`<button class="chip" aria-pressed="${S.correa===c}" data-c="${esc(c)}" title="${esc(TAGS[S.area+'|'+c]||'')}">${esc(c)}<span class="m">${POR_MESA.has(c)?'por mesa':'por estación'}</span></button>`).join(''):'';
 }
 $('#areas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.area=b.dataset.a;S.correa=null;S.tipo=null;S.draft=[];renderAll();});
 $('#correas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.correa=b.dataset.c;S.tipo=null;S.draft=[];renderAll();});
@@ -516,7 +533,7 @@ function locLabel(){
 function renderStation(){
   const ok=!!(S.correa&&S.tipo); $('#p-est').hidden=!ok; if(!ok)return;
   const t=tipoDe(S.tipo);
-  $('#loc-id').innerHTML=esc(S.correa)+' '+esc(locLabel())+`<small>${esc(t.nombre)}</small>`;
+  const tag=TAGS[S.area+'|'+S.correa]; $('#loc-id').innerHTML=esc(S.correa)+' '+esc(locLabel())+`<small>${esc(t.nombre)}${tag?' · '+esc(tag):''}</small>`;
   const byPos={}; S.draft.forEach(d=>{byPos[d.pos]=d;});
   let svg='';
   if(t.pos.length){
