@@ -160,6 +160,11 @@ nav.tabs button[aria-current="page"]::before{content:"";position:absolute;top:0;
 .row2 label[for="f-insp"],.row2 .lbl{display:block;font-weight:600;font-size:15px;margin-bottom:6px}
 .photo{display:flex;align-items:center;gap:10px}
 .photo img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.eqrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--concrete)}
+.eqrow:first-of-type{border-top:0}
+.eqname{font-weight:600;display:flex;align-items:baseline;gap:6px}
+.eqname .m{font-weight:500;font-size:12px;color:var(--muted)}
+.eqin{width:84px;text-align:center;padding:8px 6px}
 .check{display:flex;align-items:center;gap:10px;font-weight:600;min-height:44px}
 .check input{width:22px;height:22px}
 
@@ -217,7 +222,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
 <header class="top">
   <div class="top-row">
     <div class="brand">Polines<small>Inspección y cambio · Mtto Cátodos</small></div>
-    <span class="tag">Maqueta v0.4</span>
+    <span class="tag">Maqueta v0.5</span>
   </div>
 </header>
 
@@ -319,6 +324,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
     <div class="panel">
       <h2>Datos</h2>
       <div class="seg">
+        <button class="secondary" id="edit-eq">Editar máximos de equipos</button>
         <button class="secondary" id="export">Descargar CSV formato planilla</button>
         <button class="secondary" id="demo-on">Cargar datos demo</button>
         <button class="secondary" id="demo-off">Quitar datos demo</button>
@@ -389,7 +395,16 @@ const TAGS = {
 // Clave única de equipo = área + código (FEE001/FEE002/FEE003 se repiten entre las 4 áreas de Chancado/Aglomerado)
 // Clave única de equipo = área + código (hay FEE001/FEE002 repetidos entre áreas y dentro de Chancado)
 const POR_MESA = new Set(['CV012','CV017','CV018','CV019','CV020']);
-const MAX_MESAS = 40, MAX_EST = 300; // provisorio hasta tener el maestro real
+const MAX_MESAS = 40, MAX_EST = 300; // techo provisorio por defecto, hasta confirmar cada equipo
+const EQKEY='polines_maqueta_eqmax_v1';
+let EQMAX={};
+function loadEqmax(){try{const s=localStorage.getItem(EQKEY); EQMAX=s?JSON.parse(s):{};}catch(e){EQMAX={};}}
+function saveEqmax(){try{localStorage.setItem(EQKEY,JSON.stringify(EQMAX));}catch(e){}}
+function eqMaxFor(area,correa){
+  const v=EQMAX[area+'|'+correa];
+  const fallback=POR_MESA.has(correa)?MAX_MESAS:MAX_EST;
+  return {max:(v&&v>0)?v:fallback, confirmed:!!(v&&v>0)};
+}
 
 const TIPOS = [
   {id:'CAR', nombre:'Carga',          letra:'C', pos:['IZQ','CEN','DER']},
@@ -517,7 +532,11 @@ function renderAreas(){
   }else{
     $('#areas').innerHTML=Object.keys(AREAS).map(a=>`<button aria-pressed="${S.area===a}" data-a="${esc(a)}">${esc(a)}</button>`).join('');
   }
-  $('#correas').innerHTML=S.area?AREAS[S.area].map(c=>`<button class="chip" aria-pressed="${S.correa===c}" data-c="${esc(c)}" title="${esc(TAGS[S.area+'|'+c]||'')}">${esc(c)}<span class="m">${POR_MESA.has(c)?'por mesa':'por estación'}</span></button>`).join(''):'';
+  $('#correas').innerHTML=S.area?AREAS[S.area].map(c=>{
+    const eq=eqMaxFor(S.area,c); const mesa=POR_MESA.has(c);
+    const sub=eq.confirmed?(eq.max+(mesa?' mesas':' estaciones')):(mesa?'por mesa':'por estación');
+    return `<button class="chip" aria-pressed="${S.correa===c}" data-c="${esc(c)}" title="${esc(TAGS[S.area+'|'+c]||'')}">${esc(c)}<span class="m">${sub}</span></button>`;
+  }).join(''):'';
 }
 $('#areas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   S.area=(b.dataset.a==='__change')?null:b.dataset.a; S.correa=null;S.tipo=null;S.origen=null;S.draft=[];renderAll();});
@@ -566,12 +585,17 @@ function stepper(id,label,val,min,max){
 function maxNest(){const t=tipoDe(S.tipo);return t&&t.letra==='R'?2:5;}
 function renderUbic(){
   const p=$('#p-ubic'); const ok=showStationFlow(); p.hidden=!ok; if(!ok)return;
+  const eq=eqMaxFor(S.area,S.correa);
   if(esMesa()){
-    $('#nums').innerHTML=stepper('in-mesa','Mesa',S.mesa,1,MAX_MESAS)+stepper('in-nest','N° estación en la mesa',S.nest,1,maxNest());
-    $('#ubic-hint').textContent='Correa modular: carga 1 a 5 y retorno 1 a 2 por mesa, igual que la planilla.';
+    $('#nums').innerHTML=stepper('in-mesa','Mesa',S.mesa,1,eq.max)+stepper('in-nest','N° estación en la mesa',S.nest,1,maxNest());
+    $('#ubic-hint').textContent=eq.confirmed
+      ?`Correa confirmada: ${eq.max} mesas en total. Carga 1 a 5 y retorno 1 a 2 por mesa (por confirmar).`
+      :`Cantidad de mesas provisoria (${eq.max}) hasta confirmar el total real de esta correa.`;
   }else{
-    $('#nums').innerHTML=stepper('in-est','N° de estación',S.est,1,MAX_EST);
-    $('#ubic-hint').textContent='Cantidad de estaciones provisoria hasta cargar el maestro de la correa.';
+    $('#nums').innerHTML=stepper('in-est','N° de estación',S.est,1,eq.max);
+    $('#ubic-hint').textContent=eq.confirmed
+      ?`Correa confirmada: ${eq.max} estaciones en total.`
+      :`Cantidad de estaciones provisoria (${eq.max}) hasta confirmar el total real de esta correa.`;
   }
 }
 function clampSet(id,v){
@@ -843,7 +867,8 @@ function renderMapa(){
   const [mArea,correa]=$('#m-correa').value.split('|'), que=$('#m-que').value;
   const set=DB.filter(r=>r.area===mArea&&r.correa===correa&&(que==='h'||r.estado!=='PENDIENTE'));
   const mesa=POR_MESA.has(correa);
-  const nCols=mesa?Math.max(MAX_MESAS,...set.map(colDe),1):Math.ceil(MAX_EST/10);
+  const eq=eqMaxFor(mArea,correa);
+  const nCols=mesa?Math.max(eq.max,...set.map(colDe),1):Math.ceil(eq.max/10);
   const M={}; let max=0;
   set.forEach(r=>{const k=filaDe(r)+'|'+colDe(r);M[k]=(M[k]||0)+1;max=Math.max(max,M[k]);});
   let h='<thead><tr><th></th>';
@@ -856,7 +881,7 @@ function renderMapa(){
   });
   $('#hm').innerHTML=h+'</tbody>';
   $('#legend').innerHTML='Menos <span class="sw" style="background:#EEF0F2"></span>'+['#FCE7A6','#F7C35C','#EE8F2F','#D9552A','#B0241F'].map(c=>`<span class="sw" style="background:${c}"></span>`).join('')+' Más';
-  $('#hm-hint').textContent=mesa?'Columnas: número de mesa.':'Columnas: tramos de 10 estaciones, el número indica la primera estación del tramo.';
+  $('#hm-hint').textContent=(mesa?'Columnas: número de mesa.':'Columnas: tramos de 10 estaciones, el número indica la primera estación del tramo.')+(eq.confirmed?'':' Escala provisoria: falta confirmar el largo real de esta correa.');
 
   // KPIs
   const pend=DB.filter(r=>r.estado==='PENDIENTE');
@@ -884,6 +909,32 @@ function renderMapa(){
 }
 $('#m-correa').addEventListener('change',renderMapa);
 $('#m-que').addEventListener('change',renderMapa);
+
+$('#edit-eq').addEventListener('click',()=>{
+  F=null;
+  openSheet(`<div class="sheet-head"><div><div class="pid" id="sh-pid">Máximos por equipo</div><div class="sub">Mesas o estaciones totales de cada correa</div></div><button class="close" data-eq="close" aria-label="Cerrar">×</button></div>
+  <p class="hint" style="margin-top:8px">Vacío = provisorio. Escribe el número real cuando lo confirmes en terreno; el mapa de calor y el tope del formulario se ajustan solos, sin tocar los demás equipos.</p>
+  ${Object.entries(AREAS).map(([a,cs])=>`
+  <div class="block"><span class="lbl">${esc(a)}</span>
+  ${cs.map(c=>{
+    const key=a+'|'+c; const v=EQMAX[key]||''; const mesa=POR_MESA.has(c);
+    return `<div class="eqrow"><span class="eqname">${esc(c)}<span class="m">${mesa?'mesas':'estaciones'}</span></span><input class="field eqin" type="number" min="1" max="999" inputmode="numeric" data-key="${esc(key)}" value="${v}" placeholder="${mesa?MAX_MESAS:MAX_EST}"></div>`;
+  }).join('')}
+  </div>`).join('')}
+  <button class="primary" data-eq="save">Guardar máximos</button>`);
+});
+$('#sheet').addEventListener('click',e=>{
+  const b=e.target.closest('[data-eq]'); if(!b)return;
+  if(b.dataset.eq==='close'){closeSheet();return;}
+  if(b.dataset.eq==='save'){
+    document.querySelectorAll('.eqin').forEach(inp=>{
+      const key=inp.dataset.key; const v=parseInt(inp.value,10);
+      if(v>0)EQMAX[key]=v; else delete EQMAX[key];
+    });
+    saveEqmax(); closeSheet(); renderUbic(); renderAreas(); renderMapa();
+    toast('Máximos actualizados');
+  }
+});
 
 /* Demo */
 function rnd(seed){let s=seed;return ()=>{s=(s*16807)%2147483647;return (s-1)/2147483646;};}
@@ -952,6 +1003,7 @@ function renderAll(){renderTask();renderAreas();renderOrigen();renderCambioPend(
 function refreshAll(){renderAll();renderPend();renderMapa();updateBadge();}
 
 load();
+loadEqmax();
 correaOptions($('#f-correa'),'Todos los equipos');
 correaOptions($('#m-correa'),null); $('#m-correa').value='Ripios|CV020';
 renderCat(); refreshAll();
