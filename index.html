@@ -209,7 +209,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
 <header class="top">
   <div class="top-row">
     <div class="brand">Polines<small>Inspección y cambio · Mtto Cátodos</small></div>
-    <span class="tag">Maqueta v0.1</span>
+    <span class="tag">Maqueta v0.2</span>
   </div>
 </header>
 
@@ -219,7 +219,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
     <p class="demo-note">Maqueta de demostración: los registros se guardan solo en este dispositivo.</p>
 
     <div class="panel">
-      <h2><span class="n">1</span>Área y correa</h2>
+      <h2><span class="n">1</span>Área y equipo</h2>
       <div class="seg" id="areas"></div>
       <div class="chips" id="correas"></div>
     </div>
@@ -278,7 +278,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
       <p class="hint" id="hm-hint"></p>
     </div>
     <div class="panel">
-      <h2>Hallazgos por correa</h2>
+      <h2 id="by-title">Hallazgos por equipo</h2>
       <ul class="bars" id="by-correa"></ul>
     </div>
     <div class="panel">
@@ -297,7 +297,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
         <button class="secondary" id="demo-on">Cargar datos demo</button>
         <button class="secondary" id="demo-off">Quitar datos demo</button>
       </div>
-      <p class="hint">Los 5 registros reales de la CV-20 vienen precargados. Los datos demo son inventados, solo para ver cómo se comporta el mapa con más información.</p>
+      <p class="hint">Los 5 registros reales de la CV020 vienen precargados. Los datos demo son inventados, solo para ver cómo se comporta el mapa con más información.</p>
     </div>
   </section>
 
@@ -336,10 +336,14 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
 'use strict';
 /* ================= Maestros ================= */
 const AREAS = {
-  'Apilamiento': ['CV-11','CV-12','CV-13','CV-14'],
-  'Ripios': ['CV-15','CV-16','CV-17','CV-18','CV-19','CV-20','CV-21','CV-22']
+  'Chancado': ['CV001','CV002','CV003','FEE001 (G1)','FEE002 (G1)','FEE003 (G1)','CV005','CV006','CV007',
+               'FEE001 (G2)','FEE002 (G2)','FEE003 (G2)','FEE004','FEE005','FEE006','FEE007','FEE008','FEE009','FEE010','FEE011','FEE012','CV010'],
+  'Aglomerado': ['FEE001','FEE002','CV011'],
+  'Apilamiento': ['CV012','TC001','CV013','TC002','CV014'],
+  'Ripios': ['CV015','HC001','CV016','HC002','CV017','CV018','CV019','CV020','TC003','CV021','CV022']
 };
-const POR_MESA = new Set(['CV-12','CV-17','CV-18','CV-19','CV-20']);
+// Clave única de equipo = área + código (hay FEE001/FEE002 repetidos entre áreas y dentro de Chancado)
+const POR_MESA = new Set(['CV012','CV017','CV018','CV019','CV020']);
 const MAX_MESAS = 40, MAX_EST = 300; // provisorio hasta tener el maestro real
 
 const TIPOS = [
@@ -410,13 +414,13 @@ let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600);}
 
 /* ================= Datos ================= */
-const KEY='polines_maqueta_v1';
+const KEY='polines_maqueta_v2';
 const SEED=[
- {fecha:'2026-07-05',correa:'CV-20',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-03',crit:'MODERADA',estado:'CAMBIADO',inspector:'I. Acevedo',ejecutor:'Proactive piso',fechaCambio:'2026-07-05',obs:'Se cambia polin'},
- {fecha:'2026-08-12',correa:'CV-20',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-06',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-08-12',obs:'Se cambia polin'},
- {fecha:'2026-08-27',correa:'CV-20',mesa:20,nest:2,tipoEst:'RTV',pos:'DER',mf:'MF-11',crit:'ALTA',estado:'PENDIENTE',inspector:'J. Leon',ejecutor:'',obs:''},
- {fecha:'2026-09-08',correa:'CV-20',mesa:29,nest:1,tipoEst:'RTV',pos:'DER',mf:'MF-01',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-09-08',obs:'Se cambia estacion completa'},
- {fecha:'2026-09-10',correa:'CV-20',mesa:10,nest:5,tipoEst:'CAR',pos:'CEN',mf:'MF-12',crit:'MODERADA',estado:'PENDIENTE',inspector:'',ejecutor:'Proactive piso',obs:''}
+ {fecha:'2026-07-05',correa:'CV020',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-03',crit:'MODERADA',estado:'CAMBIADO',inspector:'I. Acevedo',ejecutor:'Proactive piso',fechaCambio:'2026-07-05',obs:'Se cambia polin'},
+ {fecha:'2026-08-12',correa:'CV020',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-06',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-08-12',obs:'Se cambia polin'},
+ {fecha:'2026-08-27',correa:'CV020',mesa:20,nest:2,tipoEst:'RTV',pos:'DER',mf:'MF-11',crit:'ALTA',estado:'PENDIENTE',inspector:'J. Leon',ejecutor:'',obs:''},
+ {fecha:'2026-09-08',correa:'CV020',mesa:29,nest:1,tipoEst:'RTV',pos:'DER',mf:'MF-01',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-09-08',obs:'Se cambia estacion completa'},
+ {fecha:'2026-09-10',correa:'CV020',mesa:10,nest:5,tipoEst:'CAR',pos:'CEN',mf:'MF-12',crit:'MODERADA',estado:'PENDIENTE',inspector:'',ejecutor:'Proactive piso',obs:''}
 ];
 function completar(r,i){
   r.uid=r.uid||('r'+Date.now().toString(36)+'_'+i+'_'+Math.random().toString(36).slice(2,6));
@@ -440,7 +444,7 @@ const esMesa=()=>POR_MESA.has(S.correa);
 
 function renderAreas(){
   $('#areas').innerHTML=Object.keys(AREAS).map(a=>`<button aria-pressed="${S.area===a}" data-a="${esc(a)}">${esc(a)}</button>`).join('');
-  $('#correas').innerHTML=S.area?AREAS[S.area].map(c=>`<button class="chip" aria-pressed="${S.correa===c}" data-c="${c}">${c}<span class="m">${POR_MESA.has(c)?'por mesa':'por estación'}</span></button>`).join(''):'';
+  $('#correas').innerHTML=S.area?AREAS[S.area].map(c=>`<button class="chip" aria-pressed="${S.correa===c}" data-c="${esc(c)}">${esc(c.replace(/ \(G\d\)/,''))}<span class="m">${/\(G(\d)\)/.test(c)?'grupo '+c.match(/\(G(\d)\)/)[1]:POR_MESA.has(c)?'por mesa':'por estación'}</span></button>`).join(''):'';
 }
 $('#areas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.area=b.dataset.a;S.correa=null;S.tipo=null;S.draft=[];renderAll();});
 $('#correas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.correa=b.dataset.c;S.tipo=null;S.draft=[];renderAll();});
@@ -501,7 +505,7 @@ $('#types').addEventListener('click',e=>{const b=e.target.closest('button');if(!
 $('#manual').addEventListener('input',e=>{S.manual=e.target.value;});
 
 function baseRec(pos){
-  const r={correa:S.correa,tipoEst:S.tipo,pos};
+  const r={area:S.area,correa:S.correa,tipoEst:S.tipo,pos};
   if(esMesa()){r.mesa=S.mesa;r.nest=S.nest;}else{r.est=S.est;}
   if(S.tipo==='OTR')r.manual=S.manual;
   return r;
@@ -607,7 +611,7 @@ $('#sheet').addEventListener('click',e=>{
   if(a==='add'){
     keepInputs();
     if(F.estado==='CAMBIADO'&&!F.ejecutor){toast('Elige quién ejecutó el cambio');return;}
-    const d={correa:F.correa,tipoEst:F.tipoEst,pos:F.pos,mesa:F.mesa,nest:F.nest,est:F.est,manual:F.manual,mf:F.mf,crit:F.crit,estado:F.estado,
+    const d={area:F.area,correa:F.correa,tipoEst:F.tipoEst,pos:F.pos,mesa:F.mesa,nest:F.nest,est:F.est,manual:F.manual,mf:F.mf,crit:F.crit,estado:F.estado,
       ejecutor:F.ejecutor,obs:F.obs,foto:F.foto,inspector:F.inspector,fecha:today(),fechaCambio:F.estado==='CAMBIADO'?today():''};
     if(d.mesa==null){delete d.mesa;delete d.nest;} if(d.est==null)delete d.est;
     const p=plazo(d.crit,d.fecha); d.plazo=p.label; d.limite=p.limite; d.idPolin=idPolin(d);
@@ -635,12 +639,12 @@ function keepInputs(){
 
 /* ================= Pendientes ================= */
 function correaOptions(sel,all){
-  sel.innerHTML=(all?`<option value="">${all}</option>`:'')+Object.entries(AREAS).map(([a,cs])=>`<optgroup label="${esc(a)}">${cs.map(c=>`<option>${c}</option>`).join('')}</optgroup>`).join('');
+  sel.innerHTML=(all?`<option value="">${all}</option>`:'')+Object.entries(AREAS).map(([a,cs])=>`<optgroup label="${esc(a)}">${cs.map(c=>`<option value="${esc(a+'|'+c)}">${esc(c)}</option>`).join('')}</optgroup>`).join('');
 }
 function renderPend(){
   const fc=$('#f-correa').value, fk=$('#f-crit').value;
   const orden={ALTA:0,MODERADA:1,LEVE:2};
-  const L=DB.filter(r=>r.estado==='PENDIENTE'&&(!fc||r.correa===fc)&&(!fk||r.crit===fk))
+  const L=DB.filter(r=>r.estado==='PENDIENTE'&&(!fc||(r.area+'|'+r.correa)===fc)&&(!fk||r.crit===fk))
     .sort((a,b)=>a.limite.localeCompare(b.limite)||orden[a.crit]-orden[b.crit]);
   $('#pend').innerHTML=L.length?L.map(r=>{
     const d=diasA(r.limite);
@@ -698,8 +702,8 @@ function heatColor(v,max){
   return steps[i];
 }
 function renderMapa(){
-  const correa=$('#m-correa').value, que=$('#m-que').value;
-  const set=DB.filter(r=>r.correa===correa&&(que==='h'||r.estado!=='PENDIENTE'));
+  const [mArea,correa]=$('#m-correa').value.split('|'), que=$('#m-que').value;
+  const set=DB.filter(r=>r.area===mArea&&r.correa===correa&&(que==='h'||r.estado!=='PENDIENTE'));
   const mesa=POR_MESA.has(correa);
   const nCols=mesa?Math.max(MAX_MESAS,...set.map(colDe),1):Math.ceil(MAX_EST/10);
   const M={}; let max=0;
@@ -723,22 +727,22 @@ function renderMapa(){
   const camb=DB.filter(r=>r.estado!=='PENDIENTE'&&r.fechaCambio&&isoWeek(parseD(r.fechaCambio))===semAct&&parseD(r.fechaCambio).getFullYear()===new Date().getFullYear()).length;
   $('#kpis').innerHTML=`<div class="kpi"><b>${pend.length}</b><span>Pendientes</span></div><div class="kpi"><b style="color:${venc?'var(--alta)':'inherit'}">${venc}</b><span>Vencidos</span></div><div class="kpi"><b>${camb}</b><span>Cambios semana ${semAct}</span></div>`;
 
-  // Por correa
-  const cnt={}; DB.forEach(r=>{cnt[r.correa]=(cnt[r.correa]||0)+1;});
-  const allC=Object.values(AREAS).flat(); const mx=Math.max(1,...allC.map(c=>cnt[c]||0));
-  $('#by-correa').innerHTML=allC.map(c=>`<li><span>${c}</span><span class="bar" style="width:${((cnt[c]||0)/mx*100).toFixed(1)}%;${c===correa?'background:var(--amber)':''}"></span><span class="v">${cnt[c]||0}</span></li>`).join('');
-
+  // Por equipo del área seleccionada
+  const cnt={}; DB.forEach(r=>{if(r.area===mArea)cnt[r.correa]=(cnt[r.correa]||0)+1;});
+  const allC=AREAS[mArea]; const mx=Math.max(1,...allC.map(c=>cnt[c]||0));
+  $('#by-correa').innerHTML=allC.map(c=>`<li><span>${esc(c)}</span><span class="bar" style="width:${((cnt[c]||0)/mx*100).toFixed(1)}%;${c===correa?'background:var(--amber)':''}"></span><span class="v">${cnt[c]||0}</span></li>`).join('');
+  $('#by-title').textContent='Hallazgos por equipo en '+mArea;
   // Pareto
   const pm={}; DB.forEach(r=>{pm[r.mf]=(pm[r.mf]||0)+1;});
   const top=Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,8); const mp=top.length?top[0][1]:1;
   $('#pareto').innerHTML=top.map(([k,v])=>`<li><span>${k} ${esc(MFmap[k].modo)}</span><span class="bar" style="width:${(v/mp*100).toFixed(1)}%"></span><span class="v">${v}</span></li>`).join('')||'<li class="empty">Sin datos</li>';
 
   // Reincidencias
-  const g={}; DB.forEach(r=>{const k=r.correa+' '+r.idPolin;(g[k]=g[k]||[]).push(r);});
+  const g={}; DB.forEach(r=>{const k=r.area+' '+r.correa+' '+r.idPolin;(g[k]=g[k]||[]).push(r);});
   const rein=Object.entries(g).map(([k,rs])=>{rs.sort((a,b)=>a.fecha.localeCompare(b.fecha));
     let best=0; for(let i=1;i<rs.length;i++){const dd=(parseD(rs[i].fecha)-parseD(rs[i-1].fecha))/86400000; if(dd<=90)best=Math.max(best,rs.length);} return {k,rs,best};})
     .filter(x=>x.best>=2).sort((a,b)=>b.rs.length-a.rs.length).slice(0,10);
-  $('#reinc').innerHTML=rein.length?rein.map(x=>`<li><b>${esc(x.k)}</b>: ${x.rs.length} hallazgos (${x.rs.map(r=>r.mf+' el '+fmtCL(r.fecha)).join(', ')})</li>`).join(''):'<li>Sin reincidencias.</li>';
+  $('#reinc').innerHTML=rein.length?rein.map(x=>`<li><b>${esc(x.k.split(' ').slice(1).join(' '))}</b>: ${x.rs.length} hallazgos (${x.rs.map(r=>r.mf+' el '+fmtCL(r.fecha)).join(', ')})</li>`).join(''):'<li>Sin reincidencias.</li>';
 }
 $('#m-correa').addEventListener('change',renderMapa);
 $('#m-que').addEventListener('change',renderMapa);
@@ -751,12 +755,12 @@ $('#demo-on').addEventListener('click',()=>{
   const mfW=['MF-01','MF-01','MF-03','MF-03','MF-06','MF-06','MF-07','MF-12','MF-12','MF-12','MF-08','MF-11','MF-02','MF-13','MF-14','MF-05'];
   const mfE=['MF-15','MF-16','MF-09','MF-19','MF-20','MF-17'];
   let i=0;
-  Object.values(AREAS).flat().forEach((c,ci)=>{
-    const n=10+Math.floor(R()*22); const mesa=POR_MESA.has(c);
+  Object.entries(AREAS).flatMap(([a,cs])=>cs.map(c=>[a,c])).forEach(([a,c],ci)=>{
+    const n=4+Math.floor(R()*(c.startsWith('CV')?24:8)); const mesa=POR_MESA.has(c);
     const hot=mesa?4+Math.floor(R()*28):20+Math.floor(R()*240);
     for(let k=0;k<n;k++){
       const near=R()<0.55;
-      const r={demo:true,correa:c,inspector:pick(INSPECTORES),obs:''};
+      const r={demo:true,area:a,correa:c,inspector:pick(INSPECTORES),obs:''};
       const tipo=R()<0.62?(R()<0.15?'GUI':'CAR'):(R()<0.8?'RTV':'RTR'); r.tipoEst=tipo;
       const t=tipoDe(tipo);
       if(mesa){r.mesa=near?Math.max(1,Math.min(MAX_MESAS,hot+Math.floor(R()*5)-2)):1+Math.floor(R()*MAX_MESAS); r.nest=1+Math.floor(R()*(t.letra==='R'?2:5));}
@@ -776,12 +780,12 @@ $('#demo-off').addEventListener('click',()=>{DB=DB.filter(r=>!r.demo);save();ref
 
 /* Exportación en formato planilla */
 $('#export').addEventListener('click',()=>{
-  const H=['N°','CORREA','FECHA','SEM','ESTACIÓN','MESA','OTRO TIPO DE ESTACIÓN','TIPO','N° EST','POSICIÓN','ID POLÍN','CÓD. FALLA','MODO DE FALLA','CRITICIDAD','PLAZO','FECHA LÍMITE','ESTADO','EJECUTOR INSPECCION','EJECUTOR CAMBIO','FECHA CAMBIO','OBSERVACIÓN'];
+  const H=['N°','ÁREA','EQUIPO','FECHA','SEM','ESTACIÓN','MESA','OTRO TIPO DE ESTACIÓN','TIPO','N° EST','POSICIÓN','ID POLÍN','CÓD. FALLA','MODO DE FALLA','CRITICIDAD','PLAZO','FECHA LÍMITE','ESTADO','EJECUTOR INSPECCION','EJECUTOR CAMBIO','FECHA CAMBIO','OBSERVACIÓN'];
   const posTxt={IZQ:'IZQUIERDO',CEN:'CENTRAL',DER:'DERECHO',GIZ:'GUÍA IZQUIERDA',GDE:'GUÍA DERECHA',REC:'RETORNO RECTO',EST:'ESTACIÓN COMPLETA'};
-  const rows=DB.slice().sort((a,b)=>a.correa.localeCompare(b.correa)||a.fecha.localeCompare(b.fecha)).map((r,i)=>{
+  const rows=DB.slice().sort((a,b)=>a.area.localeCompare(b.area)||a.correa.localeCompare(b.correa)||a.fecha.localeCompare(b.fecha)).map((r,i)=>{
     const t=tipoDe(r.tipoEst);
     const otro=['GUI','IMP','RTR','CAB','STR','OTR'].includes(r.tipoEst)?(r.tipoEst==='OTR'?r.manual||'Otra':t.nombre):'';
-    return [i+1,r.correa,fmtCL(r.fecha),r.sem,r.est??'',r.mesa??'',otro,t.letra==='R'?'RETORNO':'CARGA',r.nest??'',posTxt[r.pos],r.idPolin,r.mf,MFmap[r.mf].modo,r.crit,r.plazo,fmtCL(r.limite),r.estado,r.inspector||'',r.ejecutor||'',r.fechaCambio?fmtCL(r.fechaCambio):'',r.obs||''];
+    return [i+1,r.area,r.correa,fmtCL(r.fecha),r.sem,r.est??'',r.mesa??'',otro,t.letra==='R'?'RETORNO':'CARGA',r.nest??'',posTxt[r.pos],r.idPolin,r.mf,MFmap[r.mf].modo,r.crit,r.plazo,fmtCL(r.limite),r.estado,r.inspector||'',r.ejecutor||'',r.fechaCambio?fmtCL(r.fechaCambio):'',r.obs||''];
   });
   const csv='\ufeff'+[H,...rows].map(a=>a.map(v=>{v=String(v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(';')).join('\r\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
@@ -810,8 +814,8 @@ function renderAll(){renderAreas();renderUbic();renderTipos();renderStation();}
 function refreshAll(){renderAll();renderPend();renderMapa();updateBadge();}
 
 load();
-correaOptions($('#f-correa'),'Todas las correas');
-correaOptions($('#m-correa'),null); $('#m-correa').value='CV-20';
+correaOptions($('#f-correa'),'Todos los equipos');
+correaOptions($('#m-correa'),null); $('#m-correa').value='Ripios|CV020';
 renderCat(); refreshAll();
 </script>
 </body>
