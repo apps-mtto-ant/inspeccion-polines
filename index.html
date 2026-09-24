@@ -48,6 +48,9 @@ main{max-width:760px;margin:0 auto;padding:14px 14px calc(96px + var(--safe-bot)
 /* Segmented + chips */
 .seg{display:flex;gap:8px;flex-wrap:wrap}
 .seg button,.chip{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:10px 14px;font-weight:600;min-height:46px}
+.area-picked{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--steel-soft);border:1.5px solid var(--steel);border-radius:8px;padding:10px 12px}
+.area-picked span{font-family:var(--cond);font-weight:600;font-size:19px;color:var(--steel)}
+.area-picked button{border:0;background:none;color:var(--steel-2);font-weight:600;font-size:14px;text-decoration:underline;min-height:36px}
 .seg button[aria-pressed="true"],.chip[aria-pressed="true"]{background:var(--steel);border-color:var(--steel);color:#fff}
 .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;margin-top:10px}
 .chip{font-family:var(--cond);font-size:19px;padding:8px 6px;text-align:center}
@@ -460,10 +463,15 @@ const S={area:null,correa:null,mesa:1,nest:1,est:1,tipo:null,manual:'',draft:[],
 const esMesa=()=>POR_MESA.has(S.correa);
 
 function renderAreas(){
-  $('#areas').innerHTML=Object.keys(AREAS).map(a=>`<button aria-pressed="${S.area===a}" data-a="${esc(a)}">${esc(a)}</button>`).join('');
+  if(S.area){
+    $('#areas').innerHTML=`<div class="area-picked"><span>${esc(S.area)}</span><button type="button" data-a="__change">Cambiar área</button></div>`;
+  }else{
+    $('#areas').innerHTML=Object.keys(AREAS).map(a=>`<button aria-pressed="${S.area===a}" data-a="${esc(a)}">${esc(a)}</button>`).join('');
+  }
   $('#correas').innerHTML=S.area?AREAS[S.area].map(c=>`<button class="chip" aria-pressed="${S.correa===c}" data-c="${esc(c)}" title="${esc(TAGS[S.area+'|'+c]||'')}">${esc(c)}<span class="m">${POR_MESA.has(c)?'por mesa':'por estación'}</span></button>`).join(''):'';
 }
-$('#areas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.area=b.dataset.a;S.correa=null;S.tipo=null;S.draft=[];renderAll();});
+$('#areas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  S.area=(b.dataset.a==='__change')?null:b.dataset.a; S.correa=null;S.tipo=null;S.draft=[];renderAll();});
 $('#correas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.correa=b.dataset.c;S.tipo=null;S.draft=[];renderAll();});
 
 function stepper(id,label,val,min,max){
