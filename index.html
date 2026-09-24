@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F3A5F">
+<title>Polines · Mtto Cátodos (maqueta)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --steel:#1F3A5F; --steel-2:#2E5583; --steel-soft:#DCE5F0;
+  --amber:#F2A900; --amber-dark:#C98C00;
+  --ink:#1E2328; --muted:#5B6570; --line:#C9CFD4;
+  --concrete:#E8EBED; --paper:#FFFFFF;
+  --alta:#C8322A; --mod:#E08A00; --leve:#2F8A57;
+  --font:"Barlow", "Segoe UI", Roboto, Arial, sans-serif;
+  --cond:"Barlow Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--font);color:var(--ink);background:var(--concrete);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* Header */
+.top{position:sticky;top:0;z-index:20;background:var(--steel);color:#fff;padding:calc(10px + var(--safe-top)) 16px 10px}
+.top-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;max-width:760px;margin:0 auto}
+.brand{font-family:var(--cond);font-weight:700;font-size:26px;letter-spacing:.3px;line-height:1}
+.brand small{display:block;font-family:var(--font);font-weight:500;font-size:13px;opacity:.8;letter-spacing:0;margin-top:3px}
+.tag{font-size:12px;background:var(--amber);color:var(--ink);padding:3px 8px;border-radius:4px;font-weight:600;white-space:nowrap}
+
+main{max-width:760px;margin:0 auto;padding:14px 14px calc(96px + var(--safe-bot))}
+.view{display:none}
+.view.on{display:block}
+
+.demo-note{font-size:13px;color:var(--muted);margin:0 2px 12px}
+
+/* Panels */
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.panel h2{font-family:var(--cond);font-weight:600;font-size:21px;margin:0 0 10px;line-height:1.1}
+.panel h2 .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--steel);color:#fff;font-size:15px;margin-right:8px;vertical-align:2px}
+.hint{font-size:13px;color:var(--muted);margin:6px 0 0}
+
+/* Segmented + chips */
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button,.chip{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:10px 14px;font-weight:600;min-height:46px}
+.seg button[aria-pressed="true"],.chip[aria-pressed="true"]{background:var(--steel);border-color:var(--steel);color:#fff}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;margin-top:10px}
+.chip{font-family:var(--cond);font-size:19px;padding:8px 6px;text-align:center}
+.chip .m{display:block;font-family:var(--font);font-size:11px;font-weight:500;opacity:.75}
+
+/* Number steppers */
+.nums{display:flex;gap:14px;flex-wrap:wrap}
+.num{flex:1 1 150px;min-width:0}
+.num label{display:block;font-size:14px;font-weight:600;margin-bottom:4px}
+.stepper{display:flex;align-items:stretch;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.stepper button{width:52px;border:0;background:var(--concrete);font-size:24px;font-weight:600}
+.stepper input{flex:1;min-width:0;width:100%;border:0;text-align:center;font-family:var(--cond);font-size:28px;font-weight:700;padding:6px 0}
+
+/* Station types */
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.type{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:8px 6px 6px;text-align:center;font-size:13px;font-weight:600;min-height:86px}
+.type svg{display:block;margin:0 auto 4px;width:74px;height:38px}
+.type[aria-pressed="true"]{border-color:var(--steel);background:var(--steel-soft);box-shadow:inset 0 0 0 1.5px var(--steel)}
+.type:disabled{opacity:.35;cursor:not-allowed}
+.manual{margin-top:10px;display:none}
+.manual.on{display:block}
+.field{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:11px 12px;background:#fff}
+
+/* Station drawing: the hero */
+.stage{background:#F6F7F8;border:1.5px solid var(--line);border-radius:10px;padding:6px 6px 10px;position:relative}
+.stage-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 8px 0}
+.loc{font-family:var(--cond);font-size:30px;font-weight:700;line-height:1;color:var(--steel)}
+.loc small{font-family:var(--font);font-size:13px;color:var(--muted);font-weight:500;margin-left:6px}
+#drawing{width:100%;height:auto;display:block;touch-action:manipulation}
+.roll{cursor:pointer}
+.roll .hit{fill:transparent}
+.roll .body{fill:#fff;stroke:var(--ink);stroke-width:2.5}
+.roll .cap{fill:var(--ink)}
+.roll text{font-family:var(--cond);font-weight:700;font-size:20px;fill:var(--ink);pointer-events:none}
+.roll:hover .body{fill:#FFF4D6}
+.roll:focus{outline:none}
+.roll:focus-visible .body{stroke:var(--amber);stroke-width:4}
+.roll.ALTA .body{fill:var(--alta);stroke:#7a1c17}
+.roll.MODERADA .body{fill:var(--mod);stroke:#8a5500}
+.roll.LEVE .body{fill:var(--leve);stroke:#1c5535}
+.roll.ALTA text,.roll.MODERADA text,.roll.LEVE text{fill:var(--ink)}
+.struct-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:8px;border:1.5px dashed var(--muted);background:#fff;border-radius:8px;min-height:48px;font-weight:600}
+.struct-btn.ALTA{border:2px solid var(--alta);color:var(--alta)}
+.struct-btn.MODERADA{border:2px solid var(--mod);color:#8a5500}
+.struct-btn.LEVE{border:2px solid var(--leve);color:var(--leve)}
+.empty-stage{padding:34px 12px;text-align:center;color:var(--muted)}
+
+/* Draft list */
+.draft{list-style:none;margin:10px 0 0;padding:0}
+.draft li{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--concrete)}
+.draft .pid{font-family:var(--cond);font-weight:700;font-size:18px;min-width:120px}
+.draft .what{flex:1;font-size:14px}
+.draft .x{border:0;background:none;color:var(--muted);font-size:22px;width:40px;height:40px}
+
+.crit{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;color:#fff;white-space:nowrap}
+.crit.ALTA{background:var(--alta)} .crit.MODERADA{background:var(--mod);color:var(--ink)} .crit.LEVE{background:var(--leve)}
+
+.primary{width:100%;min-height:54px;border:0;border-radius:10px;background:var(--amber);color:var(--ink);font-weight:700;font-size:17px}
+.primary:disabled{background:#D9DDE1;color:#8A939B;cursor:not-allowed}
+.secondary{min-height:46px;border:1.5px solid var(--steel);background:#fff;color:var(--steel);border-radius:8px;padding:0 14px;font-weight:600}
+.link{border:0;background:none;color:var(--steel-2);font-weight:600;padding:8px 0;text-decoration:underline}
+
+/* Bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:var(--safe-bot)}
+nav.tabs .in{display:flex;width:100%;max-width:760px}
+nav.tabs button{flex:1;border:0;background:none;padding:9px 4px 8px;font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;min-height:60px}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-current="page"]{color:var(--steel)}
+nav.tabs button[aria-current="page"]::before{content:"";position:absolute;top:0;left:22%;right:22%;height:3px;background:var(--amber);border-radius:0 0 3px 3px}
+.badge{position:absolute;top:5px;left:calc(50% + 6px);background:var(--alta);color:#fff;font-size:11px;border-radius:9px;min-width:18px;padding:1px 5px}
+
+/* Sheet */
+.scrim{position:fixed;inset:0;background:rgba(20,28,38,.45);z-index:40;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--paper);border-radius:16px 16px 0 0;max-height:92vh;overflow:auto;transform:translateY(105%);transition:transform .22s ease-out;padding:0 16px calc(18px + var(--safe-bot))}
+.sheet.on{transform:none}
+.sheet .in{max-width:680px;margin:0 auto}
+.sheet-head{position:sticky;top:0;background:var(--paper);padding:14px 0 10px;border-bottom:1px solid var(--concrete);display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:2}
+.sheet-head .pid{font-family:var(--cond);font-size:30px;font-weight:700;line-height:1;color:var(--steel)}
+.sheet-head .sub{font-size:13px;color:var(--muted)}
+.close{border:0;background:var(--concrete);border-radius:50%;width:40px;height:40px;font-size:22px}
+.block{margin:14px 0}
+.block>label,.block>.lbl{display:block;font-weight:600;font-size:15px;margin-bottom:6px}
+.mf-list{border:1.5px solid var(--line);border-radius:8px;max-height:240px;overflow:auto}
+.mf{display:flex;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--concrete);background:#fff;padding:10px 12px;align-items:baseline}
+.mf:last-child{border-bottom:0}
+.mf .c{font-family:var(--cond);font-weight:700;font-size:17px;min-width:52px;color:var(--steel)}
+.mf .t{flex:1;font-size:15px}
+.mf[aria-pressed="true"]{background:var(--steel);color:#fff}
+.mf[aria-pressed="true"] .c{color:var(--amber)}
+.detail{background:var(--steel-soft);border-left:4px solid var(--steel);padding:9px 12px;border-radius:0 6px 6px 0;font-size:14px;margin-top:8px}
+.crit-seg{display:flex;gap:8px}
+.crit-seg button{flex:1;min-height:52px;border:2px solid var(--line);background:#fff;border-radius:8px;font-weight:700}
+.crit-seg button[data-c="ALTA"][aria-pressed="true"]{background:var(--alta);border-color:var(--alta);color:#fff}
+.crit-seg button[data-c="MODERADA"][aria-pressed="true"]{background:var(--mod);border-color:var(--mod)}
+.crit-seg button[data-c="LEVE"][aria-pressed="true"]{background:var(--leve);border-color:var(--leve);color:#fff}
+.plazo{margin-top:8px;font-size:14px}
+.plazo b{font-family:var(--cond);font-size:19px}
+.suggest{font-size:12px;color:var(--muted)}
+.row2{display:flex;gap:10px;flex-wrap:wrap}
+.row2>*{flex:1 1 200px}
+.row2 label[for="f-insp"],.row2 .lbl{display:block;font-weight:600;font-size:15px;margin-bottom:6px}
+.photo{display:flex;align-items:center;gap:10px}
+.photo img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.check{display:flex;align-items:center;gap:10px;font-weight:600;min-height:44px}
+.check input{width:22px;height:22px}
+
+/* Lists */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.filters select{flex:1 1 140px}
+.pend{list-style:none;margin:0;padding:0}
+.pend li{background:var(--paper);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:8px;padding:12px;margin-bottom:8px}
+.pend li.ALTA{border-left-color:var(--alta)} .pend li.MODERADA{border-left-color:var(--mod)} .pend li.LEVE{border-left-color:var(--leve)}
+.pend .l1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.pend .pid{font-family:var(--cond);font-weight:700;font-size:21px}
+.pend .cv{font-weight:600;color:var(--steel)}
+.pend .l2{font-size:14px;margin:4px 0 8px}
+.pend .l3{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.late{color:var(--alta);font-weight:700}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+
+/* Heatmap */
+.hm-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+table.hm{border-collapse:separate;border-spacing:2px;font-size:12px;padding:4px}
+table.hm th{font-weight:600;color:var(--muted);white-space:nowrap}
+table.hm thead th{font-family:var(--cond);font-size:13px;min-width:26px;text-align:center}
+table.hm tbody th{text-align:right;padding-right:6px;position:sticky;left:0;background:#fff;z-index:1}
+table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-family:var(--cond);font-weight:700;font-size:13px}
+.legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.legend span.sw{display:inline-block;width:18px;height:12px;border-radius:2px}
+.bars{list-style:none;margin:0;padding:0}
+.bars li{display:grid;grid-template-columns:minmax(120px,40%) 1fr 34px;gap:8px;align-items:center;padding:4px 0;font-size:14px}
+.bars .bar{height:16px;background:var(--steel);border-radius:3px}
+.bars .v{font-family:var(--cond);font-weight:700;text-align:right}
+.reinc{list-style:none;margin:0;padding:0}
+.reinc li{padding:8px 0;border-top:1px solid var(--concrete);font-size:14px}
+.reinc b{font-family:var(--cond);font-size:17px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px}
+.kpi b{display:block;font-family:var(--cond);font-size:30px;line-height:1}
+.kpi span{font-size:12px;color:var(--muted)}
+
+/* Catalog */
+.cat{list-style:none;margin:0;padding:0}
+.cat li{padding:10px 0;border-top:1px solid var(--concrete)}
+.cat .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.cat .c{font-family:var(--cond);font-weight:700;font-size:18px;color:var(--steel);min-width:54px}
+.cat .t{font-weight:600;flex:1}
+.cat p{margin:4px 0 0 62px;font-size:14px;color:var(--muted)}
+.lvl{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;border:1px solid var(--muted);color:var(--muted)}
+.cat li.prop{background:#FFF8E1;padding-left:8px;border-radius:6px}
+
+.toast{position:fixed;left:50%;bottom:calc(80px + var(--safe-bot));transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:8px;font-weight:600;opacity:0;transition:.2s;z-index:60;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.sheet,.toast{transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div class="brand">Polines<small>Inspección y cambio · Mtto Cátodos</small></div>
+    <span class="tag">Maqueta v0.1</span>
+  </div>
+</header>
+
+<main>
+  <!-- INSPECCIONAR -->
+  <section class="view on" id="v-insp" aria-label="Inspeccionar">
+    <p class="demo-note">Maqueta de demostración: los registros se guardan solo en este dispositivo.</p>
+
+    <div class="panel">
+      <h2><span class="n">1</span>Área y correa</h2>
+      <div class="seg" id="areas"></div>
+      <div class="chips" id="correas"></div>
+    </div>
+
+    <div class="panel" id="p-ubic" hidden>
+      <h2><span class="n">2</span>Ubicación</h2>
+      <div class="nums" id="nums"></div>
+      <p class="hint" id="ubic-hint"></p>
+    </div>
+
+    <div class="panel" id="p-tipo" hidden>
+      <h2><span class="n">3</span>Tipo de estación</h2>
+      <div class="types" id="types"></div>
+      <div class="manual" id="manual-wrap">
+        <input class="field" id="manual" placeholder="Describe la estación (ej. transición cola)" maxlength="60">
+      </div>
+    </div>
+
+    <div class="panel" id="p-est" hidden>
+      <h2><span class="n">4</span>Toca el polín con falla</h2>
+      <div class="stage">
+        <div class="stage-head"><div class="loc" id="loc-id">—</div></div>
+        <div id="stage-body"></div>
+      </div>
+      <ul class="draft" id="draft"></ul>
+      <div style="margin-top:12px"><button class="primary" id="save" disabled>Guardar inspección</button></div>
+    </div>
+  </section>
+
+  <!-- PENDIENTES -->
+  <section class="view" id="v-pend" aria-label="Pendientes">
+    <div class="filters">
+      <select class="field" id="f-correa"></select>
+      <select class="field" id="f-crit">
+        <option value="">Todas las criticidades</option>
+        <option>ALTA</option><option>MODERADA</option><option>LEVE</option>
+      </select>
+    </div>
+    <ul class="pend" id="pend"></ul>
+  </section>
+
+  <!-- MAPA -->
+  <section class="view" id="v-mapa" aria-label="Mapa de calor">
+    <div class="kpis" id="kpis"></div>
+    <div class="panel">
+      <h2>Mapa de calor</h2>
+      <div class="filters">
+        <select class="field" id="m-correa"></select>
+        <select class="field" id="m-que">
+          <option value="h">Contar hallazgos</option>
+          <option value="c">Contar cambios ejecutados</option>
+        </select>
+      </div>
+      <div class="hm-wrap"><table class="hm" id="hm"></table></div>
+      <div class="legend" id="legend"></div>
+      <p class="hint" id="hm-hint"></p>
+    </div>
+    <div class="panel">
+      <h2>Hallazgos por correa</h2>
+      <ul class="bars" id="by-correa"></ul>
+    </div>
+    <div class="panel">
+      <h2>Modos de falla más frecuentes</h2>
+      <ul class="bars" id="pareto"></ul>
+    </div>
+    <div class="panel">
+      <h2>Reincidencias</h2>
+      <p class="hint" style="margin:0 0 6px">Misma posición con dos o más hallazgos en 90 días.</p>
+      <ul class="reinc" id="reinc"></ul>
+    </div>
+    <div class="panel">
+      <h2>Datos</h2>
+      <div class="seg">
+        <button class="secondary" id="export">Descargar CSV formato planilla</button>
+        <button class="secondary" id="demo-on">Cargar datos demo</button>
+        <button class="secondary" id="demo-off">Quitar datos demo</button>
+      </div>
+      <p class="hint">Los 5 registros reales de la CV-20 vienen precargados. Los datos demo son inventados, solo para ver cómo se comporta el mapa con más información.</p>
+    </div>
+  </section>
+
+  <!-- FALLAS -->
+  <section class="view" id="v-cat" aria-label="Catálogo de fallas">
+    <div class="panel">
+      <h2>Catálogo de modos de falla</h2>
+      <p class="hint" style="margin:0 0 8px">Fuente: Registro de Polines v4. La criticidad sugerida es una propuesta para validar con el especialista.</p>
+      <ul class="cat" id="cat"></ul>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Secciones">
+  <div class="in">
+    <button data-v="v-insp" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="7" height="4" rx="1" transform="rotate(20 6.5 12)"/><rect x="9" y="13" width="6" height="3.5" rx="1"/><rect x="14" y="10" width="7" height="4" rx="1" transform="rotate(-20 17.5 12)"/><path d="M12 9V3m-3 3 3-3 3 3"/></svg>
+      Inspeccionar</button>
+    <button data-v="v-pend">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Pendientes<span class="badge" id="badge" hidden></span></button>
+    <button data-v="v-mapa">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="5" height="5"/><rect x="10" y="4" width="5" height="5" fill="currentColor"/><rect x="17" y="4" width="4" height="5"/><rect x="3" y="11" width="5" height="5" fill="currentColor"/><rect x="10" y="11" width="5" height="5"/><rect x="17" y="11" width="4" height="5" fill="currentColor"/><path d="M3 20h18"/></svg>
+      Mapa</button>
+    <button data-v="v-cat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>
+      Fallas</button>
+  </div>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-pid"><div class="in" id="sheet-in"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* ================= Maestros ================= */
+const AREAS = {
+  'Apilamiento': ['CV-11','CV-12','CV-13','CV-14'],
+  'Ripios': ['CV-15','CV-16','CV-17','CV-18','CV-19','CV-20','CV-21','CV-22']
+};
+const POR_MESA = new Set(['CV-12','CV-17','CV-18','CV-19','CV-20']);
+const MAX_MESAS = 40, MAX_EST = 300; // provisorio hasta tener el maestro real
+
+const TIPOS = [
+  {id:'CAR', nombre:'Carga',          letra:'C', pos:['IZQ','CEN','DER']},
+  {id:'GUI', nombre:'Carga con guía', letra:'C', pos:['GIZ','IZQ','CEN','DER','GDE']},
+  {id:'IMP', nombre:'Impacto',        letra:'C', pos:['IZQ','CEN','DER']},
+  {id:'RTV', nombre:'Retorno V',      letra:'R', pos:['IZQ','DER']},
+  {id:'RTR', nombre:'Retorno recto',  letra:'R', pos:['REC']},
+  {id:'CAB', nombre:'Cabezal',        letra:'CAB', pos:[]},
+  {id:'STR', nombre:'Stringer',       letra:'STR', pos:[]},
+  {id:'OTR', nombre:'Otra (manual)',  letra:'OTR', pos:[]}
+];
+const POS_NOMBRE = {IZQ:'Izquierdo',CEN:'Central',DER:'Derecho',GIZ:'Guía izquierda',GDE:'Guía derecha',REC:'Retorno recto',EST:'Estación / estructura'};
+
+const MF = [
+ ['MF-01','Desgaste excesivo del manto','Pérdida significativa de espesor, reducción del diámetro, acanalamiento o desgaste irregular del manto.','P','LEVE'],
+ ['MF-02','Manto perforado o colapsado','Perforación, abertura, aplastamiento o pérdida de la geometría y resistencia estructural del manto.','P','MODERADA'],
+ ['MF-03','Ruido anormal','Chirrido, golpeteo, roce o sonido metálico continuo durante la rotación del polín.','P','MODERADA'],
+ ['MF-04','Rodamiento desplazado','Rodamiento, alojamiento o sello fuera de su posición original, normalmente acompañado de holgura axial o radial.','P','MODERADA'],
+ ['MF-05','Rodamiento reventado','Desintegración o daño severo del rodamiento, con expulsión de componentes, juego excesivo o pérdida de rotación.','P','ALTA'],
+ ['MF-06','Rodamiento agarrotado','Rodamiento bloqueado o con resistencia excesiva que impide o restringe severamente el giro.','P','ALTA'],
+ ['MF-07','Polín trabado','El manto permanece detenido mientras la correa se encuentra en movimiento, generando roce directo sobre la cinta.','P','ALTA'],
+ ['MF-08','Giro deficiente','Rotación pesada, lenta, intermitente o irregular, sin llegar al bloqueo total del polín.','P','MODERADA'],
+ ['MF-09','Desnivel de piso','Piso se encuentra desnivelado, impidiendo el trabajo parejo de los polines.','E','LEVE'],
+ ['MF-10','Desprendimiento de revestimiento','Separación parcial o total del revestimiento de goma respecto del cuerpo metálico del polín.','P','MODERADA'],
+ ['MF-11','Revestimiento de impacto desgastado','Discos o anillos de goma con pérdida de espesor, cortes, grietas, endurecimiento o deformación.','P','LEVE'],
+ ['MF-12','Falta de aseo o acumulación de material','Adherencia excesiva de mineral sobre el manto o sus extremos, alterando el diámetro, contacto o rotación.','P','LEVE'],
+ ['MF-13','Desalineamiento del polín','Polín fuera de escuadra, nivel o posición respecto de la trayectoria de la cinta, provocando contacto irregular.','P','MODERADA'],
+ ['MF-14','Polín fuera de alojamiento','Eje o extremo del polín salido parcial o totalmente de la ranura, soporte o punto de montaje.','P','ALTA'],
+ ['MF-15','Pernería suelta o faltante','Pérdida de apriete, ausencia o daño de pernos, tuercas o elementos de fijación del polín o soporte.','E','MODERADA'],
+ ['MF-16','Soporte deformado','Marco, cuna, alojamiento, oreja o base del polín doblado, torcido o fuera de su geometría original.','E','MODERADA'],
+ ['MF-17','Soporte fisurado o fracturado','Presencia de grietas o rotura parcial o total en el soporte, bastidor, alojamiento o unión soldada.','E','ALTA'],
+ ['MF-18','Polín faltante','Ausencia total de un polín en una estación o conjunto, dejando la cinta sin el apoyo correspondiente.','P','ALTA'],
+ ['MF-19','Cadena de suspensión cortada o mal diseño','Rotura de uno o más eslabones, provocando pérdida de sustentación, desnivel o caída parcial del conjunto colgante, mal diseño del fabricante','E','ALTA'],
+ ['MF-20','Placas gemelas fracturadas o sueltas','Placas de unión o articulación con fractura, deformación, holgura o fijaciones sueltas o faltantes.','E','MODERADA']
+].map(a=>({cod:a[0],modo:a[1],det:a[2],nivel:a[3],crit:a[4]}));
+const MFmap = Object.fromEntries(MF.map(m=>[m.cod,m]));
+
+const INSPECTORES = ['I. Acevedo','J. Leon','Inspector demo Bmax','Inspector demo Proactive'];
+const EJECUTORES = ['Proactive piso','Bmax piso','Bmax vertical'];
+
+/* ================= Utilidades ================= */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = (n,l)=>String(n).padStart(l,'0');
+const parseD = s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const fmtISO = d=>d.getFullYear()+'-'+pad(d.getMonth()+1,2)+'-'+pad(d.getDate(),2);
+const fmtCL = s=>{const d=parseD(s);return pad(d.getDate(),2)+'-'+pad(d.getMonth()+1,2)+'-'+d.getFullYear();};
+const addDays = (d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+const today = ()=>fmtISO(new Date());
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/86400000+1)/7);}
+function plazo(crit,fechaISO){
+  const d=parseD(fechaISO);
+  if(crit==='ALTA'){return {label:'Urgente',limite:fmtISO(addDays(d,2))};}
+  const k=crit==='MODERADA'?1:2;
+  const mon0=(d.getDay()+6)%7;
+  const dom=addDays(d,6-mon0+7*k);
+  return {label:'S+'+k+' (sem '+isoWeek(dom)+')',limite:fmtISO(dom)};
+}
+const diasA = lim=>Math.round((parseD(lim)-parseD(today()))/86400000);
+const tipoDe = id=>TIPOS.find(t=>t.id===id);
+function idPolin(r){
+  const t=tipoDe(r.tipoEst); const L=t?t.letra:'X';
+  if(r.mesa!=null){ const tipoPart = (L==='C'||L==='R') ? L+(r.nest||'') : L; return 'M'+pad(r.mesa,2)+'-'+tipoPart+'-'+r.pos; }
+  return 'E'+pad(r.est,3)+'-'+L+'-'+r.pos;
+}
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600);}
+
+/* ================= Datos ================= */
+const KEY='polines_maqueta_v1';
+const SEED=[
+ {fecha:'2026-07-05',correa:'CV-20',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-03',crit:'MODERADA',estado:'CAMBIADO',inspector:'I. Acevedo',ejecutor:'Proactive piso',fechaCambio:'2026-07-05',obs:'Se cambia polin'},
+ {fecha:'2026-08-12',correa:'CV-20',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-06',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-08-12',obs:'Se cambia polin'},
+ {fecha:'2026-08-27',correa:'CV-20',mesa:20,nest:2,tipoEst:'RTV',pos:'DER',mf:'MF-11',crit:'ALTA',estado:'PENDIENTE',inspector:'J. Leon',ejecutor:'',obs:''},
+ {fecha:'2026-09-08',correa:'CV-20',mesa:29,nest:1,tipoEst:'RTV',pos:'DER',mf:'MF-01',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-09-08',obs:'Se cambia estacion completa'},
+ {fecha:'2026-09-10',correa:'CV-20',mesa:10,nest:5,tipoEst:'CAR',pos:'CEN',mf:'MF-12',crit:'MODERADA',estado:'PENDIENTE',inspector:'',ejecutor:'Proactive piso',obs:''}
+];
+function completar(r,i){
+  r.uid=r.uid||('r'+Date.now().toString(36)+'_'+i+'_'+Math.random().toString(36).slice(2,6));
+  r.area=r.area||Object.keys(AREAS).find(a=>AREAS[a].includes(r.correa));
+  r.sem=isoWeek(parseD(r.fecha));
+  const p=plazo(r.crit,r.fecha); r.plazo=p.label; r.limite=p.limite;
+  r.idPolin=idPolin(r);
+  return r;
+}
+let DB=[];
+function load(){
+  try{const s=localStorage.getItem(KEY); if(s){DB=JSON.parse(s);return;}}catch(e){}
+  DB=SEED.map((r,i)=>completar(Object.assign({real:true},r),i));
+  save();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+
+/* ================= Estado de inspección ================= */
+const S={area:null,correa:null,mesa:1,nest:1,est:1,tipo:null,manual:'',draft:[],inspector:INSPECTORES[0]};
+const esMesa=()=>POR_MESA.has(S.correa);
+
+function renderAreas(){
+  $('#areas').innerHTML=Object.keys(AREAS).map(a=>`<button aria-pressed="${S.area===a}" data-a="${esc(a)}">${esc(a)}</button>`).join('');
+  $('#correas').innerHTML=S.area?AREAS[S.area].map(c=>`<button class="chip" aria-pressed="${S.correa===c}" data-c="${c}">${c}<span class="m">${POR_MESA.has(c)?'por mesa':'por estación'}</span></button>`).join(''):'';
+}
+$('#areas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.area=b.dataset.a;S.correa=null;S.tipo=null;S.draft=[];renderAll();});
+$('#correas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.correa=b.dataset.c;S.tipo=null;S.draft=[];renderAll();});
+
+function stepper(id,label,val,min,max){
+  return `<div class="num"><label for="${id}">${label}</label><div class="stepper">
+  <button type="button" data-step="${id}" data-d="-1" aria-label="Restar">−</button>
+  <input id="${id}" inputmode="numeric" pattern="[0-9]*" value="${val}" data-min="${min}" data-max="${max}">
+  <button type="button" data-step="${id}" data-d="1" aria-label="Sumar">+</button></div></div>`;
+}
+function maxNest(){const t=tipoDe(S.tipo);return t&&t.letra==='R'?2:5;}
+function renderUbic(){
+  const p=$('#p-ubic'); p.hidden=!S.correa; if(!S.correa)return;
+  if(esMesa()){
+    $('#nums').innerHTML=stepper('in-mesa','Mesa',S.mesa,1,MAX_MESAS)+stepper('in-nest','N° estación en la mesa',S.nest,1,maxNest());
+    $('#ubic-hint').textContent='Correa modular: carga 1 a 5 y retorno 1 a 2 por mesa, igual que la planilla.';
+  }else{
+    $('#nums').innerHTML=stepper('in-est','N° de estación',S.est,1,MAX_EST);
+    $('#ubic-hint').textContent='Cantidad de estaciones provisoria hasta cargar el maestro de la correa.';
+  }
+}
+function clampSet(id,v){
+  const inp=$('#'+id); if(!inp)return;
+  const min=+inp.dataset.min,max=+inp.dataset.max; v=Math.max(min,Math.min(max,isNaN(v)?min:v)); inp.value=v;
+  if(id==='in-mesa')S.mesa=v; if(id==='in-nest')S.nest=v; if(id==='in-est')S.est=v;
+  S.draft=[]; renderStation();
+}
+$('#nums').addEventListener('click',e=>{const b=e.target.closest('[data-step]');if(!b)return;const inp=$('#'+b.dataset.step);clampSet(b.dataset.step,(+inp.value||0)+(+b.dataset.d));});
+$('#nums').addEventListener('change',e=>{if(e.target.tagName==='INPUT')clampSet(e.target.id,parseInt(e.target.value,10));});
+
+/* Miniaturas y dibujo */
+function rollShape(x,y,w,h,rot){return `<g transform="rotate(${rot} ${x+w/2} ${y+h/2})"><rect class="body" x="${x}" y="${y}" width="${w}" height="${h}" rx="5"/><rect class="cap" x="${x-4}" y="${y+h/2-3}" width="4" height="6"/><rect class="cap" x="${x+w}" y="${y+h/2-3}" width="4" height="6"/></g>`;}
+const GEOM={
+  // x,y,w,h,rot,labelX,labelY
+  IZQ:[40,112,92,24,25,62,95], CEN:[140,150,80,24,0,180,205], DER:[228,112,92,24,-25,298,95],
+  GIZ:[20,50,20,56,-18,30,40], GDE:[320,50,20,56,18,330,40],
+  VIZ:[62,120,100,24,25,82,104], VDE:[198,120,100,24,-25,278,104],
+  REC:[60,146,240,24,0,180,202]
+};
+function geomFor(tipo,pos){
+  if(tipo==='RTV')return pos==='IZQ'?GEOM.VIZ:GEOM.VDE;
+  return GEOM[pos];
+}
+const LETRA={IZQ:'I',CEN:'C',DER:'D',GIZ:'GI',GDE:'GD',REC:'R'};
+function thumb(t){
+  const s={CAR:['IZQ','CEN','DER'],GUI:['GIZ','IZQ','CEN','DER','GDE'],IMP:['IZQ','CEN','DER'],RTV:['IZQ','DER'],RTR:['REC']}[t.id];
+  if(!s) return `<svg viewBox="0 0 360 200"><rect x="40" y="70" width="280" height="80" rx="8" fill="none" stroke="currentColor" stroke-width="10" stroke-dasharray="${t.id==='OTR'?'22 16':'0'}"/><path d="M40 150 L320 70" stroke="currentColor" stroke-width="8"/></svg>`;
+  return `<svg viewBox="0 0 360 200" style="color:var(--ink)">${s.map(p=>{const g=geomFor(t.id,p);return `<g transform="rotate(${g[4]} ${g[0]+g[2]/2} ${g[1]+g[3]/2})"><rect x="${g[0]}" y="${g[1]}" width="${g[2]}" height="${g[3]}" rx="5" fill="${t.id==='IMP'?'#3a3f45':'#fff'}" stroke="currentColor" stroke-width="8"/></g>`;}).join('')}</svg>`;
+}
+function renderTipos(){
+  const ok=!!S.correa; $('#p-tipo').hidden=!ok; if(!ok)return;
+  $('#types').innerHTML=TIPOS.map(t=>`<button class="type" aria-pressed="${S.tipo===t.id}" data-t="${t.id}">${thumb(t)}${esc(t.nombre)}</button>`).join('');
+  $('#manual-wrap').classList.toggle('on',S.tipo==='OTR');
+}
+$('#types').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.tipo=b.dataset.t;S.draft=[];
+  if(esMesa()&&S.nest>maxNest())S.nest=maxNest();
+  renderUbic();renderTipos();renderStation();});
+$('#manual').addEventListener('input',e=>{S.manual=e.target.value;});
+
+function baseRec(pos){
+  const r={correa:S.correa,tipoEst:S.tipo,pos};
+  if(esMesa()){r.mesa=S.mesa;r.nest=S.nest;}else{r.est=S.est;}
+  if(S.tipo==='OTR')r.manual=S.manual;
+  return r;
+}
+function locLabel(){
+  const r=baseRec('X'); const id=idPolin(r); return id.slice(0,id.lastIndexOf('-'));
+}
+function renderStation(){
+  const ok=!!(S.correa&&S.tipo); $('#p-est').hidden=!ok; if(!ok)return;
+  const t=tipoDe(S.tipo);
+  $('#loc-id').innerHTML=esc(S.correa)+' '+esc(locLabel())+`<small>${esc(t.nombre)}</small>`;
+  const byPos={}; S.draft.forEach(d=>{byPos[d.pos]=d;});
+  let svg='';
+  if(t.pos.length){
+    svg=`<svg id="drawing" viewBox="-6 0 372 230" role="group" aria-label="Estación ${esc(t.nombre)}">
+      <g fill="none" stroke="#8A939B" stroke-width="2"><path d="M20 222 H340"/></g>
+      <g aria-hidden="true"><path d="M180 22 v44" stroke="var(--steel)" stroke-width="10"/><path d="M162 34 L180 10 L198 34 Z" fill="var(--steel)"/>
+      <text x="180" y="84" text-anchor="middle" font-size="13" font-family="Barlow, sans-serif" fill="var(--muted)" font-weight="600">sentido de carga</text></g>`;
+    t.pos.forEach(p=>{
+      const g=geomFor(t.id,p); const d=byPos[p];
+      svg+=`<g class="roll ${d?d.crit:''}" tabindex="0" role="button" data-pos="${p}" aria-label="${POS_NOMBRE[p]}${d?', marcado '+d.crit:''}">
+        <g transform="rotate(${g[4]} ${g[0]+g[2]/2} ${g[1]+g[3]/2})"><rect class="hit" x="${g[0]-10}" y="${g[1]-18}" width="${g[2]+20}" height="${g[3]+36}"/></g>
+        ${rollShape(g[0],g[1],g[2],g[3],g[4])}
+        <text x="${g[5]}" y="${g[6]}" text-anchor="middle">${LETRA[p]}</text></g>`;
+    });
+    svg+='</svg>';
+  }else{
+    svg=`<div class="empty-stage">Esta estación se registra completa. Usa el botón de abajo.</div>`;
+  }
+  const dE=byPos.EST;
+  $('#stage-body').innerHTML=svg+`<button class="struct-btn ${dE?dE.crit:''}" data-pos="EST">${dE?'Estructura marcada ('+dE.mf+')':'Falla de estación / estructura'}</button>`;
+  $('#draft').innerHTML=S.draft.map((d,i)=>`<li><span class="pid">${esc(d.idPolin)}</span><span class="what">${esc(d.mf)} ${esc(MFmap[d.mf].modo)}<br><span class="crit ${d.crit}">${d.crit}</span> ${esc(d.plazo)}${d.estado==='CAMBIADO'?' · cambiado':''}</span><button class="x" data-i="${i}" aria-label="Quitar">×</button></li>`).join('');
+  const b=$('#save'); b.disabled=!S.draft.length; b.textContent=S.draft.length?`Guardar inspección (${S.draft.length} hallazgo${S.draft.length>1?'s':''})`:'Guardar inspección';
+}
+$('#stage-body').addEventListener('click',e=>{const g=e.target.closest('[data-pos]');if(g)openFicha(g.dataset.pos);});
+$('#stage-body').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset&&e.target.dataset.pos){e.preventDefault();openFicha(e.target.dataset.pos);}});
+$('#draft').addEventListener('click',e=>{const b=e.target.closest('.x');if(!b)return;S.draft.splice(+b.dataset.i,1);renderStation();});
+$('#save').addEventListener('click',()=>{
+  if(S.tipo==='OTR'&&!S.manual.trim()){toast('Describe la estación "Otra" antes de guardar');$('#manual').focus();return;}
+  const n=S.draft.length;
+  S.draft.forEach((d,i)=>DB.push(completar(d,i)));
+  save(); S.draft=[];
+  if(esMesa()){S.nest=Math.min(S.nest+1,maxNest());}else{S.est=Math.min(S.est+1,MAX_EST);}
+  renderUbic();renderStation();updateBadge();
+  toast(`Inspección guardada: ${n} hallazgo${n>1?'s':''}`);
+});
+
+/* ================= Ficha (sheet) ================= */
+let F=null;
+function openSheet(html){$('#sheet-in').innerHTML=html;$('#scrim').classList.add('on');$('#sheet').classList.add('on');$('#sheet').scrollTop=0;}
+function closeSheet(){$('#scrim').classList.remove('on');$('#sheet').classList.remove('on');F=null;}
+$('#scrim').addEventListener('click',closeSheet);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
+
+function openFicha(pos){
+  const prev=S.draft.find(d=>d.pos===pos);
+  const r=baseRec(pos);
+  F=Object.assign({mf:null,crit:null,estado:'PENDIENTE',ejecutor:'',obs:'',foto:false,inspector:S.inspector},prev||{},r);
+  F.idPolin=idPolin(F);
+  drawFicha();
+}
+function drawFicha(){
+  const sh=$('#sheet'), keepTop=$('#sheet').classList.contains('on')?sh.scrollTop:0, ml=document.querySelector('.mf-list'), keepMl=ml?ml.scrollTop:0;
+  const nivel=F.verNivel||(F.pos==='EST'?'E':'P');
+  const list=MF.filter(m=>m.nivel===nivel);
+  const m=F.mf?MFmap[F.mf]:null;
+  const pz=F.crit?plazo(F.crit,today()):null;
+  openSheet(`
+  <div class="sheet-head"><div><div class="pid" id="sh-pid">${esc(F.correa)} ${esc(F.idPolin)}</div><div class="sub">${esc(POS_NOMBRE[F.pos])}, ${esc(tipoDe(F.tipoEst).nombre)}</div></div><button class="close" data-a="close" aria-label="Cerrar">×</button></div>
+  <div class="block"><span class="lbl">Modo de falla ${nivel==='E'?'(estructura)':'(polín)'}</span>
+    <div class="mf-list">${list.map(x=>`<button class="mf" aria-pressed="${F.mf===x.cod}" data-mf="${x.cod}"><span class="c">${x.cod}</span><span class="t">${esc(x.modo)}</span></button>`).join('')}</div>
+    ${m?`<div class="detail">${esc(m.det)}</div>`:''}
+    <button class="link" data-a="swap">${nivel==='E'?'Ver fallas de polín':'Ver fallas de estructura'}</button>
+  </div>
+  <div class="block"><span class="lbl">Criticidad</span>
+    <div class="crit-seg">${['ALTA','MODERADA','LEVE'].map(c=>`<button data-c="${c}" aria-pressed="${F.crit===c}">${c==='MODERADA'?'Moderada':c==='ALTA'?'Alta':'Leve'}</button>`).join('')}</div>
+    ${m?`<div class="suggest">Sugerida para ${m.cod}: ${m.crit.toLowerCase()}</div>`:''}
+    ${pz?`<div class="plazo">Plazo de cambio: <b>${esc(pz.label)}</b>, a más tardar el ${fmtCL(pz.limite)}</div>`:''}
+  </div>
+  <div class="block row2">
+    <div><label for="f-insp">Inspector</label><select class="field" id="f-insp">${INSPECTORES.map(i=>`<option ${F.inspector===i?'selected':''}>${esc(i)}</option>`).join('')}</select></div>
+    <div><span class="lbl">Foto</span><div class="photo"><label class="secondary" style="display:inline-flex;align-items:center" for="f-foto">Tomar foto</label><input type="file" accept="image/*" capture="environment" id="f-foto" hidden><span id="f-prev"></span></div></div>
+  </div>
+  <div class="block">
+    <label class="check"><input type="checkbox" id="f-camb" ${F.estado==='CAMBIADO'?'checked':''}>Se cambió en el momento</label>
+    <div id="f-ejec-wrap" ${F.estado==='CAMBIADO'?'':'hidden'}><select class="field" id="f-ejec"><option value="">Ejecutor del cambio</option>${EJECUTORES.map(x=>`<option ${F.ejecutor===x?'selected':''}>${x}</option>`).join('')}</select></div>
+  </div>
+  <div class="block"><label for="f-obs">Observación</label><textarea class="field" id="f-obs" rows="2" maxlength="200">${esc(F.obs)}</textarea></div>
+  <button class="primary" data-a="add" ${F.mf&&F.crit?'':'disabled'}>Agregar hallazgo</button>
+  ${S.draft.some(d=>d.pos===F.pos)?'<button class="link" data-a="del" style="display:block;margin:10px auto 0">Quitar este hallazgo</button>':''}
+  `);
+  F._nivelVista=nivel;
+  sh.scrollTop=keepTop; const ml2=document.querySelector('.mf-list'); if(ml2){ml2.scrollTop=keepMl; const sel=ml2.querySelector('[aria-pressed="true"]'); if(sel){const a=sel.offsetTop, b2=a+sel.offsetHeight; if(a<ml2.scrollTop||b2>ml2.scrollTop+ml2.clientHeight) ml2.scrollTop=a-40;}}
+}
+$('#sheet').addEventListener('click',e=>{
+  if(!F)return;
+  const t=e.target.closest('button'); if(!t)return;
+  if(t.dataset.mf){F.mf=t.dataset.mf; if(!F.critManual)F.crit=MFmap[F.mf].crit; keepInputs(); drawFicha(); return;}
+  if(t.dataset.c){F.crit=t.dataset.c;F.critManual=true;keepInputs();drawFicha();return;}
+  const a=t.dataset.a;
+  if(a==='close'){closeSheet();}
+  if(a==='swap'){keepInputs(); F.verNivel = F._nivelVista==='E' ? 'P' : 'E'; drawFicha();}
+  if(a==='add'){
+    keepInputs();
+    if(F.estado==='CAMBIADO'&&!F.ejecutor){toast('Elige quién ejecutó el cambio');return;}
+    const d={correa:F.correa,tipoEst:F.tipoEst,pos:F.pos,mesa:F.mesa,nest:F.nest,est:F.est,manual:F.manual,mf:F.mf,crit:F.crit,estado:F.estado,
+      ejecutor:F.ejecutor,obs:F.obs,foto:F.foto,inspector:F.inspector,fecha:today(),fechaCambio:F.estado==='CAMBIADO'?today():''};
+    if(d.mesa==null){delete d.mesa;delete d.nest;} if(d.est==null)delete d.est;
+    const p=plazo(d.crit,d.fecha); d.plazo=p.label; d.limite=p.limite; d.idPolin=idPolin(d);
+    S.inspector=F.inspector;
+    S.draft=S.draft.filter(x=>x.pos!==d.pos); S.draft.push(d);
+    closeSheet(); renderStation();
+  }
+  if(a==='del'){S.draft=S.draft.filter(x=>x.pos!==F.pos);closeSheet();renderStation();}
+});
+$('#sheet').addEventListener('change',e=>{
+  if(!F)return;
+  if(e.target.id==='f-camb'){F.estado=e.target.checked?'CAMBIADO':'PENDIENTE';$('#f-ejec-wrap').hidden=!e.target.checked;}
+  if(e.target.id==='f-foto'&&e.target.files[0]){
+    F.foto=true; const url=URL.createObjectURL(e.target.files[0]);
+    $('#f-prev').innerHTML=`<img src="${url}" alt="Foto adjunta">`;
+  }
+});
+function keepInputs(){
+  const g=id=>document.getElementById(id);
+  if(g('f-insp'))F.inspector=g('f-insp').value;
+  if(g('f-ejec'))F.ejecutor=g('f-ejec').value;
+  if(g('f-obs'))F.obs=g('f-obs').value;
+  if(g('f-camb'))F.estado=g('f-camb').checked?'CAMBIADO':'PENDIENTE';
+}
+
+/* ================= Pendientes ================= */
+function correaOptions(sel,all){
+  sel.innerHTML=(all?`<option value="">${all}</option>`:'')+Object.entries(AREAS).map(([a,cs])=>`<optgroup label="${esc(a)}">${cs.map(c=>`<option>${c}</option>`).join('')}</optgroup>`).join('');
+}
+function renderPend(){
+  const fc=$('#f-correa').value, fk=$('#f-crit').value;
+  const orden={ALTA:0,MODERADA:1,LEVE:2};
+  const L=DB.filter(r=>r.estado==='PENDIENTE'&&(!fc||r.correa===fc)&&(!fk||r.crit===fk))
+    .sort((a,b)=>a.limite.localeCompare(b.limite)||orden[a.crit]-orden[b.crit]);
+  $('#pend').innerHTML=L.length?L.map(r=>{
+    const d=diasA(r.limite);
+    const txt=d<0?`<span class="late">Vencido hace ${-d} día${d===-1?'':'s'}</span>`:d===0?'<span class="late">Vence hoy</span>':`Vence en ${d} día${d===1?'':'s'}`;
+    return `<li class="${r.crit}"><div class="l1"><span class="pid">${esc(r.idPolin)}</span><span class="cv">${esc(r.correa)}</span></div>
+    <div class="l2">${esc(r.mf)} ${esc(MFmap[r.mf].modo)}<br><span class="crit ${r.crit}">${r.crit}</span> ${esc(r.plazo)}</div>
+    <div class="l3"><span>${txt}. Detectado ${fmtCL(r.fecha)}${r.inspector?' por '+esc(r.inspector):''}</span><button class="secondary" data-uid="${r.uid}">Registrar cambio</button></div></li>`;
+  }).join(''):`<li class="empty" style="border:0;background:none">No hay cambios pendientes con este filtro.</li>`;
+}
+$('#f-correa').addEventListener('change',renderPend);
+$('#f-crit').addEventListener('change',renderPend);
+$('#pend').addEventListener('click',e=>{
+  const b=e.target.closest('[data-uid]'); if(!b)return;
+  const r=DB.find(x=>x.uid===b.dataset.uid); if(!r)return;
+  F={cambio:r};
+  openSheet(`<div class="sheet-head"><div><div class="pid" id="sh-pid">${esc(r.correa)} ${esc(r.idPolin)}</div><div class="sub">${esc(r.mf)} ${esc(MFmap[r.mf].modo)}</div></div><button class="close" data-cc="close" aria-label="Cerrar">×</button></div>
+  <div class="block"><label for="c-ejec">Ejecutor del cambio</label><select class="field" id="c-ejec"><option value="">Elige</option>${EJECUTORES.map(x=>`<option ${r.ejecutor===x?'selected':''}>${x}</option>`).join('')}</select></div>
+  <div class="block"><label for="c-fecha">Fecha del cambio</label><input type="date" class="field" id="c-fecha" value="${today()}" max="${today()}"></div>
+  <div class="block"><label class="check"><input type="checkbox" id="c-est">Se cambió la estación completa</label></div>
+  <div class="block"><label for="c-obs">Observación</label><textarea class="field" id="c-obs" rows="2"></textarea></div>
+  <button class="primary" data-cc="ok">Registrar cambio</button>`);
+});
+document.getElementById('sheet').addEventListener('click',e=>{
+  const b=e.target.closest('[data-cc]'); if(!b||!F||!F.cambio)return;
+  if(b.dataset.cc==='close'){closeSheet();return;}
+  const ej=$('#c-ejec').value; if(!ej){toast('Elige quién ejecutó el cambio');return;}
+  const r=F.cambio; r.estado='CAMBIADO'; r.ejecutor=ej; r.fechaCambio=$('#c-fecha').value||today();
+  const extra=[$('#c-est').checked?'Se cambia estación completa':'',$('#c-obs').value.trim()].filter(Boolean).join('. ');
+  if(extra)r.obs=(r.obs?r.obs+'. ':'')+extra;
+  save(); closeSheet(); renderPend(); updateBadge(); toast('Cambio registrado: '+r.idPolin);
+});
+
+function updateBadge(){
+  const n=DB.filter(r=>r.estado==='PENDIENTE').length;
+  const b=$('#badge'); b.hidden=!n; b.textContent=n;
+}
+
+/* ================= Mapa y análisis ================= */
+const FILAS=[
+  ['cIZQ','Carga I'],['cCEN','Carga C'],['cDER','Carga D'],['gui','Guía'],
+  ['rIZQ','Retorno I'],['rDER','Retorno D'],['rREC','Retorno recto'],['est','Estructura']
+];
+function filaDe(r){
+  if(r.pos==='EST'||['CAB','STR','OTR'].includes(r.tipoEst))return 'est';
+  if(r.pos==='GIZ'||r.pos==='GDE')return 'gui';
+  if(r.tipoEst==='RTR')return 'rREC';
+  if(r.tipoEst==='RTV')return 'r'+r.pos;
+  return 'c'+r.pos;
+}
+function colDe(r){return r.mesa!=null?r.mesa:Math.ceil(r.est/10);}
+function heatColor(v,max){
+  if(!v)return '#EEF0F2';
+  const steps=['#FCE7A6','#F7C35C','#EE8F2F','#D9552A','#B0241F'];
+  const i=Math.min(steps.length-1,Math.floor((v/max)*(steps.length-0.001)));
+  return steps[i];
+}
+function renderMapa(){
+  const correa=$('#m-correa').value, que=$('#m-que').value;
+  const set=DB.filter(r=>r.correa===correa&&(que==='h'||r.estado!=='PENDIENTE'));
+  const mesa=POR_MESA.has(correa);
+  const nCols=mesa?Math.max(MAX_MESAS,...set.map(colDe),1):Math.ceil(MAX_EST/10);
+  const M={}; let max=0;
+  set.forEach(r=>{const k=filaDe(r)+'|'+colDe(r);M[k]=(M[k]||0)+1;max=Math.max(max,M[k]);});
+  let h='<thead><tr><th></th>';
+  for(let c=1;c<=nCols;c++)h+=`<th>${mesa?c:((c-1)*10+1)}</th>`;
+  h+='</tr></thead><tbody>';
+  FILAS.forEach(([k,l])=>{
+    h+=`<tr><th>${l}</th>`;
+    for(let c=1;c<=nCols;c++){const v=M[k+'|'+c]||0;h+=`<td style="background:${heatColor(v,max)};color:${v&&v/max>0.55?'#fff':'var(--ink)'}" title="${l}, ${mesa?'mesa '+c:'estaciones '+((c-1)*10+1)+' a '+(c*10)}: ${v}">${v||''}</td>`;}
+    h+='</tr>';
+  });
+  $('#hm').innerHTML=h+'</tbody>';
+  $('#legend').innerHTML='Menos <span class="sw" style="background:#EEF0F2"></span>'+['#FCE7A6','#F7C35C','#EE8F2F','#D9552A','#B0241F'].map(c=>`<span class="sw" style="background:${c}"></span>`).join('')+' Más';
+  $('#hm-hint').textContent=mesa?'Columnas: número de mesa.':'Columnas: tramos de 10 estaciones, el número indica la primera estación del tramo.';
+
+  // KPIs
+  const pend=DB.filter(r=>r.estado==='PENDIENTE');
+  const venc=pend.filter(r=>diasA(r.limite)<0).length;
+  const semAct=isoWeek(new Date());
+  const camb=DB.filter(r=>r.estado!=='PENDIENTE'&&r.fechaCambio&&isoWeek(parseD(r.fechaCambio))===semAct&&parseD(r.fechaCambio).getFullYear()===new Date().getFullYear()).length;
+  $('#kpis').innerHTML=`<div class="kpi"><b>${pend.length}</b><span>Pendientes</span></div><div class="kpi"><b style="color:${venc?'var(--alta)':'inherit'}">${venc}</b><span>Vencidos</span></div><div class="kpi"><b>${camb}</b><span>Cambios semana ${semAct}</span></div>`;
+
+  // Por correa
+  const cnt={}; DB.forEach(r=>{cnt[r.correa]=(cnt[r.correa]||0)+1;});
+  const allC=Object.values(AREAS).flat(); const mx=Math.max(1,...allC.map(c=>cnt[c]||0));
+  $('#by-correa').innerHTML=allC.map(c=>`<li><span>${c}</span><span class="bar" style="width:${((cnt[c]||0)/mx*100).toFixed(1)}%;${c===correa?'background:var(--amber)':''}"></span><span class="v">${cnt[c]||0}</span></li>`).join('');
+
+  // Pareto
+  const pm={}; DB.forEach(r=>{pm[r.mf]=(pm[r.mf]||0)+1;});
+  const top=Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,8); const mp=top.length?top[0][1]:1;
+  $('#pareto').innerHTML=top.map(([k,v])=>`<li><span>${k} ${esc(MFmap[k].modo)}</span><span class="bar" style="width:${(v/mp*100).toFixed(1)}%"></span><span class="v">${v}</span></li>`).join('')||'<li class="empty">Sin datos</li>';
+
+  // Reincidencias
+  const g={}; DB.forEach(r=>{const k=r.correa+' '+r.idPolin;(g[k]=g[k]||[]).push(r);});
+  const rein=Object.entries(g).map(([k,rs])=>{rs.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    let best=0; for(let i=1;i<rs.length;i++){const dd=(parseD(rs[i].fecha)-parseD(rs[i-1].fecha))/86400000; if(dd<=90)best=Math.max(best,rs.length);} return {k,rs,best};})
+    .filter(x=>x.best>=2).sort((a,b)=>b.rs.length-a.rs.length).slice(0,10);
+  $('#reinc').innerHTML=rein.length?rein.map(x=>`<li><b>${esc(x.k)}</b>: ${x.rs.length} hallazgos (${x.rs.map(r=>r.mf+' el '+fmtCL(r.fecha)).join(', ')})</li>`).join(''):'<li>Sin reincidencias.</li>';
+}
+$('#m-correa').addEventListener('change',renderMapa);
+$('#m-que').addEventListener('change',renderMapa);
+
+/* Demo */
+function rnd(seed){let s=seed;return ()=>{s=(s*16807)%2147483647;return (s-1)/2147483646;};}
+$('#demo-on').addEventListener('click',()=>{
+  if(DB.some(r=>r.demo)){toast('Los datos demo ya están cargados');return;}
+  const R=rnd(20260924); const pick=a=>a[Math.floor(R()*a.length)];
+  const mfW=['MF-01','MF-01','MF-03','MF-03','MF-06','MF-06','MF-07','MF-12','MF-12','MF-12','MF-08','MF-11','MF-02','MF-13','MF-14','MF-05'];
+  const mfE=['MF-15','MF-16','MF-09','MF-19','MF-20','MF-17'];
+  let i=0;
+  Object.values(AREAS).flat().forEach((c,ci)=>{
+    const n=10+Math.floor(R()*22); const mesa=POR_MESA.has(c);
+    const hot=mesa?4+Math.floor(R()*28):20+Math.floor(R()*240);
+    for(let k=0;k<n;k++){
+      const near=R()<0.55;
+      const r={demo:true,correa:c,inspector:pick(INSPECTORES),obs:''};
+      const tipo=R()<0.62?(R()<0.15?'GUI':'CAR'):(R()<0.8?'RTV':'RTR'); r.tipoEst=tipo;
+      const t=tipoDe(tipo);
+      if(mesa){r.mesa=near?Math.max(1,Math.min(MAX_MESAS,hot+Math.floor(R()*5)-2)):1+Math.floor(R()*MAX_MESAS); r.nest=1+Math.floor(R()*(t.letra==='R'?2:5));}
+      else{r.est=near?Math.max(1,Math.min(MAX_EST,hot+Math.floor(R()*30)-15)):1+Math.floor(R()*MAX_EST);}
+      if(R()<0.12){r.pos='EST';r.mf=pick(mfE);}else{r.pos=pick(t.pos);r.mf=pick(mfW);}
+      r.crit=R()<0.8?MFmap[r.mf].crit:pick(['ALTA','MODERADA','LEVE']);
+      const d=addDays(new Date(),-Math.floor(R()*112)); r.fecha=fmtISO(d);
+      const edad=Math.round((new Date()-d)/86400000);
+      if(edad>21||R()<0.45){r.estado=R()<0.1?'ADICIONAL':'CAMBIADO';r.ejecutor=pick(EJECUTORES);r.fechaCambio=fmtISO(addDays(d,Math.min(edad,Math.floor(R()*10))));}
+      else{r.estado='PENDIENTE';r.ejecutor='';}
+      DB.push(completar(r,i++));
+    }
+  });
+  save();refreshAll();toast('Datos demo cargados');
+});
+$('#demo-off').addEventListener('click',()=>{DB=DB.filter(r=>!r.demo);save();refreshAll();toast('Datos demo quitados');});
+
+/* Exportación en formato planilla */
+$('#export').addEventListener('click',()=>{
+  const H=['N°','CORREA','FECHA','SEM','ESTACIÓN','MESA','OTRO TIPO DE ESTACIÓN','TIPO','N° EST','POSICIÓN','ID POLÍN','CÓD. FALLA','MODO DE FALLA','CRITICIDAD','PLAZO','FECHA LÍMITE','ESTADO','EJECUTOR INSPECCION','EJECUTOR CAMBIO','FECHA CAMBIO','OBSERVACIÓN'];
+  const posTxt={IZQ:'IZQUIERDO',CEN:'CENTRAL',DER:'DERECHO',GIZ:'GUÍA IZQUIERDA',GDE:'GUÍA DERECHA',REC:'RETORNO RECTO',EST:'ESTACIÓN COMPLETA'};
+  const rows=DB.slice().sort((a,b)=>a.correa.localeCompare(b.correa)||a.fecha.localeCompare(b.fecha)).map((r,i)=>{
+    const t=tipoDe(r.tipoEst);
+    const otro=['GUI','IMP','RTR','CAB','STR','OTR'].includes(r.tipoEst)?(r.tipoEst==='OTR'?r.manual||'Otra':t.nombre):'';
+    return [i+1,r.correa,fmtCL(r.fecha),r.sem,r.est??'',r.mesa??'',otro,t.letra==='R'?'RETORNO':'CARGA',r.nest??'',posTxt[r.pos],r.idPolin,r.mf,MFmap[r.mf].modo,r.crit,r.plazo,fmtCL(r.limite),r.estado,r.inspector||'',r.ejecutor||'',r.fechaCambio?fmtCL(r.fechaCambio):'',r.obs||''];
+  });
+  const csv='\ufeff'+[H,...rows].map(a=>a.map(v=>{v=String(v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(';')).join('\r\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='Registro_Polines_'+today()+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+  toast('CSV descargado, se abre directo en Excel');
+});
+
+/* ================= Catálogo ================= */
+function renderCat(){
+  $('#cat').innerHTML=MF.map(m=>`<li><div class="h"><span class="c">${m.cod}</span><span class="t">${esc(m.modo)}</span><span class="lvl">${m.nivel==='E'?'Estructura':'Polín'}</span><span class="crit ${m.crit}">${m.crit}</span></div><p>${esc(m.det)}</p></li>`).join('')+
+  `<li class="prop"><div class="h"><span class="c">MF-21</span><span class="t">Cadena con defecto de diseño del proveedor</span><span class="lvl">Propuesta</span></div><p>Separar de MF-19 para poder respaldar reclamos de garantía. Pendiente de validar con el especialista.</p></li>`;
+}
+
+/* ================= Navegación ================= */
+document.querySelector('nav.tabs').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('nav.tabs button').forEach(x=>x.removeAttribute('aria-current'));
+  b.setAttribute('aria-current','page');
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v));
+  window.scrollTo(0,0);
+  if(b.dataset.v==='v-pend')renderPend();
+  if(b.dataset.v==='v-mapa')renderMapa();
+});
+
+function renderAll(){renderAreas();renderUbic();renderTipos();renderStation();}
+function refreshAll(){renderAll();renderPend();renderMapa();updateBadge();}
+
+load();
+correaOptions($('#f-correa'),'Todas las correas');
+correaOptions($('#m-correa'),null); $('#m-correa').value='CV-20';
+renderCat(); refreshAll();
+</script>
+</body>
+</html>
