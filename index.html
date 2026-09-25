@@ -227,7 +227,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
     <div class="badge-l" aria-hidden="true">MP</div>
     <div class="brand-mid">
       <div class="brand-title">Mantenimiento Polines ANT</div>
-      <div class="brand-sub">Antucoya · Mantenimiento Ejecución Cátodos · v0.9 (maqueta)</div>
+      <div class="brand-sub">Antucoya · Mantenimiento Ejecución Cátodos · v0.10 (maqueta)</div>
     </div>
     <div class="badge-r" aria-hidden="true">ANT</div>
   </div>
@@ -425,8 +425,7 @@ const TAGS = {
   'Ripios|CV017':'3330-CV017-C02','Ripios|CV018':'3330-CV018-C02','Ripios|CV019':'3330-CV019-C02','Ripios|CV020':'3330-CV020-C02',
   'Ripios|TC003':'3340-TC003-C02','Ripios|CV021':'3340-CV021-C02','Ripios|CV022':'3340-CV022-C02'
 };
-// Clave única de equipo = área + código (FEE001/FEE002/FEE003 se repiten entre las 4 áreas de Chancado/Aglomerado)
-// Clave única de equipo = área + código (hay FEE001/FEE002 repetidos entre áreas y dentro de Chancado)
+// Clave única de equipo = área + código: hay FEE001/FEE002/FEE003 repetidos entre distintas áreas de Chancado y Aglomerado
 const POR_MESA = new Set(['CV012','CV017','CV018','CV019','CV020']);
 const MAX_MESAS = 40, MAX_EST = 300; // techo provisorio por defecto, hasta confirmar cada equipo
 const CFGKEY='polines_maqueta_config_v1';
@@ -514,7 +513,7 @@ let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600);}
 
 /* ================= Datos ================= */
-const KEY='polines_maqueta_v6';
+const KEY='polines_maqueta_v7';
 const SEED=[
  {area:'Ripios',fecha:'2026-07-05',correa:'CV020',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-03',crit:'MODERADA',estado:'CAMBIADO',inspector:'I. Acevedo',ejecutor:'Proactive piso',fechaCambio:'2026-07-05',obs:'Se cambia polin'},
  {area:'Ripios',fecha:'2026-08-12',correa:'CV020',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-06',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-08-12',obs:'Se cambia polin'},
@@ -525,6 +524,7 @@ const SEED=[
 function completar(r,i){
   r.uid=r.uid||('r'+Date.now().toString(36)+'_'+i+'_'+Math.random().toString(36).slice(2,6));
   // Área es obligatoria y viene siempre explícita desde S.area (auditoría §3): nunca se infiere.
+  r.origen=r.origen||'INSPECCION'; // estado / origen / tipoIntervencion son dimensiones separadas (auditoría v0.10 §3)
   r.sem=isoWeek(parseD(r.fecha));
   const p=plazo(r.crit,r.fecha); r.plazo=p.label; r.limite=p.limite;
   r.idPolin=idPolin(r);
@@ -720,7 +720,7 @@ function renderStation(){
   $('#draft').innerHTML=S.draft.map((d,i)=>{
     const mfTxt=d.mf?`${esc(d.mf)} ${esc(MFmap[d.mf].modo)}`:'Sin falla específica';
     const tiLabel=d.tipoInt==='PROGRAMADA'?'Programado':d.tipoInt==='NO_PROGRAMADA'?'No programado':'';
-    const tail=(d.estado==='ADICIONAL'||d.estado==='CAMBIADO')?`${tiLabel?tiLabel+' · ':''}${esc(d.ejecutor||'')} · ${fmtCL(d.fechaCambio||d.fecha)}`:`${esc(d.plazo)}`;
+    const tail=d.estado==='CAMBIADO'?`${tiLabel?tiLabel+' · ':''}${esc(d.ejecutor||'')} · ${fmtCL(d.fechaCambio||d.fecha)}`:`${esc(d.plazo)}`;
     return `<li><span class="pid">${esc(d.idPolin)}</span><span class="what">${mfTxt}<br><span class="crit ${d.crit}">${d.crit}</span> ${tail}</span><button class="x" data-i="${i}" aria-label="Quitar">×</button></li>`;
   }).join('');
   const cm=modoCambio(); const b=$('#save'); b.disabled=!S.draft.length;
@@ -812,14 +812,16 @@ $('#sheet').addEventListener('click',e=>{
     if(cm){
       if(!F.crit){toast('Elige la criticidad');return;}
       if(!F.ejecutor){toast('Escribe quién ejecuta el cambio');return;}
-      if(!F.foto){toast('Adjunta una foto del cambio');return;}
     }else{
       if(!F.inspector){toast('Escribe el nombre del inspector');return;}
       if(F.estado==='CAMBIADO'&&!F.ejecutor){toast('Elige quién ejecutó el cambio');return;}
     }
+    // estado/origen/tipoIntervencion son dimensiones separadas (auditoría v0.10 §3).
+    // Cambio inmediato durante Inspección = NO_PROGRAMADA automático, sin preguntar (auditoría v0.10 §2).
     const d={area:F.area,correa:F.correa,tipoEst:F.tipoEst,pos:F.pos,mesa:F.mesa,nest:F.nest,est:F.est,manual:F.manual,mf:F.mf,crit:F.crit,
-      estado:cm?'ADICIONAL':F.estado,
-      tipoInt:cm?tipoIntervencion():'',
+      estado:cm?'CAMBIADO':F.estado,
+      origen:cm?'ADICIONAL':'INSPECCION',
+      tipoInt:cm?tipoIntervencion():(F.estado==='CAMBIADO'?'NO_PROGRAMADA':''),
       ejecutor:F.ejecutor,obs:F.obs,foto:F.foto,photoUrl:F.photoUrl||'',inspector:cm?'':F.inspector,
       fecha:today(),fechaCambio:cm?(F.fecha||today()):(F.estado==='CAMBIADO'?today():'')};
     if(d.mesa==null){delete d.mesa;delete d.nest;} if(d.est==null)delete d.est;
@@ -892,7 +894,6 @@ document.getElementById('sheet').addEventListener('click',e=>{
   if(b.dataset.cc==='close'){closeSheet();return;}
   if(!F.tipoInt){toast('Elige si es un cambio programado o no programado');return;}
   const ej=$('#c-ejec').value.trim(); if(!ej){toast('Escribe quién ejecuta el cambio');return;}
-  if(!F.foto){toast('Adjunta una foto del cambio');return;}
   const r=F.cambio; r.estado='CAMBIADO'; r.tipoInt=F.tipoInt; r.ejecutor=ej; r.fechaCambio=$('#c-fecha').value||today(); r.photoUrl=F.photoUrl||'';
   const extra=[$('#c-est').checked?'Se cambia estación completa':'',$('#c-obs').value.trim()].filter(Boolean).join('. ');
   if(extra)r.obs=(r.obs?r.obs+'. ':'')+extra;
@@ -1001,8 +1002,8 @@ $('#demo-on').addEventListener('click',()=>{
       r.crit=R()<0.8?MFmap[r.mf].crit:pick(['ALTA','MODERADA','LEVE']);
       const d=addDays(new Date(),-Math.floor(R()*112)); r.fecha=fmtISO(d);
       const edad=Math.round((new Date()-d)/86400000);
-      if(edad>21||R()<0.45){r.estado=R()<0.1?'ADICIONAL':'CAMBIADO';r.ejecutor=pick(EJECUTORES);r.fechaCambio=fmtISO(addDays(d,Math.min(edad,Math.floor(R()*10))));}
-      else{r.estado='PENDIENTE';r.ejecutor='';}
+      if(edad>21||R()<0.45){r.estado='CAMBIADO';r.origen=R()<0.1?'ADICIONAL':'INSPECCION';r.tipoInt=R()<0.7?'PROGRAMADA':'NO_PROGRAMADA';r.ejecutor=pick(EJECUTORES);r.fechaCambio=fmtISO(addDays(d,Math.min(edad,Math.floor(R()*10))));}
+      else{r.estado='PENDIENTE';r.origen='INSPECCION';r.tipoInt='';r.ejecutor='';}
       DB.push(completar(r,i++));
     }
   });
@@ -1012,12 +1013,12 @@ $('#demo-off').addEventListener('click',()=>{DB=DB.filter(r=>!r.demo);save();ref
 
 /* Exportación en formato planilla */
 $('#export').addEventListener('click',()=>{
-  const H=['N°','ÁREA','EQUIPO','FECHA','SEM','ESTACIÓN','MESA','OTRO TIPO DE ESTACIÓN','TIPO','N° EST','POSICIÓN','ID POLÍN','CÓD. FALLA','MODO DE FALLA','CRITICIDAD','PLAZO','FECHA LÍMITE','ESTADO','TIPO INTERVENCIÓN','EJECUTOR INSPECCION','EJECUTOR CAMBIO','FECHA CAMBIO','OBSERVACIÓN'];
+  const H=['N°','ÁREA','EQUIPO','TAG','FECHA','SEM','ESTACIÓN','MESA','OTRO TIPO DE ESTACIÓN','TIPO','N° EST','POSICIÓN','ID POLÍN','CÓD. FALLA','MODO DE FALLA','CRITICIDAD','PLAZO','FECHA LÍMITE','ESTADO','ORIGEN','TIPO INTERVENCIÓN','EJECUTOR INSPECCION','EJECUTOR CAMBIO','FECHA CAMBIO','OBSERVACIÓN'];
   const posTxt={IZQ:'IZQUIERDO',CEN:'CENTRAL',DER:'DERECHO',GIZ:'GUÍA IZQUIERDA',GDE:'GUÍA DERECHA',REC:'RETORNO RECTO',EST:'ESTACIÓN COMPLETA'};
   const rows=DB.slice().sort((a,b)=>a.area.localeCompare(b.area)||a.correa.localeCompare(b.correa)||a.fecha.localeCompare(b.fecha)).map((r,i)=>{
     const t=tipoDe(r.tipoEst);
     const otro=['GUI','IMP','RTR','CAB','STR','OTR'].includes(r.tipoEst)?(r.tipoEst==='OTR'?r.manual||'Otra':t.nombre):'';
-    return [i+1,r.area,r.correa,fmtCL(r.fecha),r.sem,r.est??'',r.mesa??'',otro,t.letra==='R'?'RETORNO':'CARGA',r.nest??'',posTxt[r.pos],r.idPolin,r.mf||'',r.mf?MFmap[r.mf].modo:'',r.crit,r.plazo,fmtCL(r.limite),r.estado,r.tipoInt||'',r.inspector||'',r.ejecutor||'',r.fechaCambio?fmtCL(r.fechaCambio):'',r.obs||''];
+    return [i+1,r.area,r.correa,TAGS[r.area+'|'+r.correa]||'',fmtCL(r.fecha),r.sem,r.est??'',r.mesa??'',otro,t.letra==='R'?'RETORNO':'CARGA',r.nest??'',posTxt[r.pos],r.idPolin,r.mf||'',r.mf?MFmap[r.mf].modo:'',r.crit,r.plazo,fmtCL(r.limite),r.estado,r.origen||'',r.tipoInt||'',r.inspector||'',r.ejecutor||'',r.fechaCambio?fmtCL(r.fechaCambio):'',r.obs||''];
   });
   const csv='\ufeff'+[H,...rows].map(a=>a.map(v=>{v=String(v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(';')).join('\r\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
