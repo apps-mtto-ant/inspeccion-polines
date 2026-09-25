@@ -50,9 +50,9 @@ main{max-width:760px;margin:0 auto;padding:14px 14px calc(96px + var(--safe-bot)
 .area-picked span{font-family:var(--font-display);font-weight:600;font-size:19px;color:var(--steel)}
 .area-picked button{border:0;background:none;color:var(--steel-2);font-weight:600;font-size:14px;text-decoration:underline;min-height:36px}
 .task-list{display:flex;flex-direction:column}
-.btn-full{width:100%;border:0;border-radius:10px;background:var(--steel);color:#fff;font-family:var(--font-body);font-weight:700;font-size:15.5px;padding:16px;margin-bottom:6px;text-align:left}
+.btn-full{width:100%;border:0;border-radius:10px;background:var(--steel);color:#fff;font-family:var(--font-body);font-weight:700;font-size:15.5px;padding:16px;margin-bottom:6px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-full:active{background:var(--steel-2)}
-.task-legend{margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.4}
+.task-legend{margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.4;text-align:center}
 .seg button[aria-pressed="true"],.chip[aria-pressed="true"]{background:var(--steel);border-color:var(--steel);color:#fff}
 .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;margin-top:10px}
 .chip{font-family:var(--font-display);font-size:19px;padding:8px 6px;text-align:center}
@@ -227,7 +227,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
     <div class="badge-l" aria-hidden="true">MP</div>
     <div class="brand-mid">
       <div class="brand-title">Mantenimiento Polines ANT</div>
-      <div class="brand-sub">Antucoya · Mantenimiento Ejecución Cátodos · v0.7 (maqueta)</div>
+      <div class="brand-sub">Antucoya · Mantenimiento Ejecución Cátodos · v0.9 (maqueta)</div>
     </div>
     <div class="badge-r" aria-hidden="true">ANT</div>
   </div>
@@ -301,6 +301,7 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
 
   <!-- MAPA -->
   <section class="view" id="v-mapa" aria-label="Mapa de calor">
+    <p class="hint" style="margin:0 0 6px">Resumen general — todas las áreas, no solo el equipo que elijas abajo.</p>
     <div class="kpis" id="kpis"></div>
     <div class="panel">
       <h2>Mapa de calor</h2>
@@ -320,12 +321,13 @@ table.hm td{width:26px;height:26px;border-radius:3px;text-align:center;font-fami
       <ul class="bars" id="by-correa"></ul>
     </div>
     <div class="panel">
-      <h2>Modos de falla más frecuentes</h2>
+      <h2 id="pareto-title">Modos de falla más frecuentes</h2>
       <ul class="bars" id="pareto"></ul>
     </div>
     <div class="panel">
       <h2>Reincidencias</h2>
-      <p class="hint" style="margin:0 0 6px">Misma posición con dos o más hallazgos en 90 días.</p>
+      <p class="hint" style="margin:0 0 6px">Misma posición con dos o más hallazgos dentro de una ventana de 90 días. Se buscan en toda la base, no solo en el equipo seleccionado.</p>
+
       <ul class="reinc" id="reinc"></ul>
     </div>
     <div class="panel">
@@ -474,8 +476,9 @@ const MF = [
  ['MF-16','Soporte deformado','Marco, cuna, alojamiento, oreja o base del polín doblado, torcido o fuera de su geometría original.','E','MODERADA'],
  ['MF-17','Soporte fisurado o fracturado','Presencia de grietas o rotura parcial o total en el soporte, bastidor, alojamiento o unión soldada.','E','ALTA'],
  ['MF-18','Polín faltante','Ausencia total de un polín en una estación o conjunto, dejando la cinta sin el apoyo correspondiente.','P','ALTA'],
- ['MF-19','Cadena de suspensión cortada o mal diseño','Rotura de uno o más eslabones, provocando pérdida de sustentación, desnivel o caída parcial del conjunto colgante, mal diseño del fabricante','E','ALTA'],
- ['MF-20','Placas gemelas fracturadas o sueltas','Placas de unión o articulación con fractura, deformación, holgura o fijaciones sueltas o faltantes.','E','MODERADA']
+ ['MF-19','Cadena de suspensión cortada','Rotura de uno o más eslabones, provocando pérdida de sustentación, desnivel o caída parcial del conjunto colgante.','E','ALTA'],
+ ['MF-20','Placas gemelas fracturadas o sueltas','Placas de unión o articulación con fractura, deformación, holgura o fijaciones sueltas o faltantes.','E','MODERADA'],
+ ['MF-21','Defecto de diseño de cadena o sistema de suspensión','Falla o debilidad atribuible a un defecto de diseño o fabricación del proveedor, no a desgaste u operación normal.','E','MODERADA']
 ].map(a=>({cod:a[0],modo:a[1],det:a[2],nivel:a[3],crit:a[4]}));
 const MFmap = Object.fromEntries(MF.map(m=>[m.cod,m]));
 
@@ -511,17 +514,17 @@ let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600);}
 
 /* ================= Datos ================= */
-const KEY='polines_maqueta_v4';
+const KEY='polines_maqueta_v6';
 const SEED=[
- {fecha:'2026-07-05',correa:'CV020',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-03',crit:'MODERADA',estado:'CAMBIADO',inspector:'I. Acevedo',ejecutor:'Proactive piso',fechaCambio:'2026-07-05',obs:'Se cambia polin'},
- {fecha:'2026-08-12',correa:'CV020',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-06',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-08-12',obs:'Se cambia polin'},
- {fecha:'2026-08-27',correa:'CV020',mesa:20,nest:2,tipoEst:'RTV',pos:'DER',mf:'MF-11',crit:'ALTA',estado:'PENDIENTE',inspector:'J. Leon',ejecutor:'',obs:''},
- {fecha:'2026-09-08',correa:'CV020',mesa:29,nest:1,tipoEst:'RTV',pos:'DER',mf:'MF-01',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-09-08',obs:'Se cambia estacion completa'},
- {fecha:'2026-09-10',correa:'CV020',mesa:10,nest:5,tipoEst:'CAR',pos:'CEN',mf:'MF-12',crit:'MODERADA',estado:'PENDIENTE',inspector:'',ejecutor:'Proactive piso',obs:''}
+ {area:'Ripios',fecha:'2026-07-05',correa:'CV020',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-03',crit:'MODERADA',estado:'CAMBIADO',inspector:'I. Acevedo',ejecutor:'Proactive piso',fechaCambio:'2026-07-05',obs:'Se cambia polin'},
+ {area:'Ripios',fecha:'2026-08-12',correa:'CV020',mesa:1,nest:1,tipoEst:'CAR',pos:'CEN',mf:'MF-06',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-08-12',obs:'Se cambia polin'},
+ {area:'Ripios',fecha:'2026-08-27',correa:'CV020',mesa:20,nest:2,tipoEst:'RTV',pos:'DER',mf:'MF-11',crit:'ALTA',estado:'PENDIENTE',inspector:'J. Leon',ejecutor:'',obs:''},
+ {area:'Ripios',fecha:'2026-09-08',correa:'CV020',mesa:29,nest:1,tipoEst:'RTV',pos:'DER',mf:'MF-01',crit:'ALTA',estado:'CAMBIADO',inspector:'J. Leon',ejecutor:'Bmax piso',fechaCambio:'2026-09-08',obs:'Se cambia estacion completa'},
+ {area:'Ripios',fecha:'2026-09-10',correa:'CV020',mesa:10,nest:5,tipoEst:'CAR',pos:'CEN',mf:'MF-12',crit:'MODERADA',estado:'PENDIENTE',inspector:'',ejecutor:'Proactive piso',obs:''}
 ];
 function completar(r,i){
   r.uid=r.uid||('r'+Date.now().toString(36)+'_'+i+'_'+Math.random().toString(36).slice(2,6));
-  r.area=r.area||Object.keys(AREAS).find(a=>AREAS[a].includes(r.correa));
+  // Área es obligatoria y viene siempre explícita desde S.area (auditoría §3): nunca se infiere.
   r.sem=isoWeek(parseD(r.fecha));
   const p=plazo(r.crit,r.fecha); r.plazo=p.label; r.limite=p.limite;
   r.idPolin=idPolin(r);
@@ -551,8 +554,10 @@ function renderTask(){
   $('#task-cards').innerHTML=`
     <button class="btn-full" type="button" data-task="insp">🔍 Iniciar Inspección</button>
     <p class="hint task-legend">Con la correa operando, sin detenerla. Cada hallazgo queda pendiente con un plazo automático.</p>
-    <button class="btn-full" type="button" data-task="cambio">🛠️ Registrar Cambio</button>
-    <p class="hint task-legend">Con la correa detenida en mantenimiento. Puede nacer de un hallazgo ya visto o de una condición vista en el momento.</p>`;
+    <button class="btn-full" type="button" data-task="progr">🛠️ Registrar Cambio Programado</button>
+    <p class="hint task-legend">Cambio ejecutado durante la detención programada de mantenimiento.</p>
+    <button class="btn-full" type="button" data-task="noprog">⚡ Registrar Cambio No Programado</button>
+    <p class="hint task-legend">Cambio ejecutado fuera de la detención programada, por una condición que no puede esperar.</p>`;
 }
 $('#task-cards').addEventListener('click',e=>{const b=e.target.closest('[data-task]');if(!b)return;
   S.task=b.dataset.task;S.area=null;S.correa=null;S.origen=null;S.tipo=null;S.draft=[];renderAll();});
@@ -561,11 +566,13 @@ $('#task-band').addEventListener('click',e=>{const b=e.target.closest('[data-tas
 
 function renderAreas(){
   const p=$('#p-area'); p.hidden=!S.task; if(!S.task)return;
-  const taskLabel=S.task==='insp'?'Inspeccionar':'Registrar cambio';
+  const taskLabel=S.task==='insp'?'Inspección':S.task==='progr'?'Cambio programado':'Cambio no programado';
   $('#task-band').innerHTML=`<div class="area-picked"><span>${esc(taskLabel)}</span><button type="button" data-task="__change">Cambiar tarea</button></div>`;
   $('#area-legend').textContent=S.task==='insp'
     ?'Se registra con la correa operando, sin detenerla. Cada hallazgo queda pendiente con un plazo automático.'
-    :'Se hace con la correa detenida en mantenimiento. El cambio puede nacer de un hallazgo ya visto o de una condición vista en el momento.';
+    :S.task==='progr'
+    ?'Cambio ejecutado durante la detención programada de mantenimiento.'
+    :'Cambio ejecutado fuera de la detención programada, por una condición que no puede esperar.';
   if(S.area){
     $('#areas').innerHTML=`<div class="area-picked"><span>${esc(S.area)}</span><button type="button" data-a="__change">Cambiar área</button></div>`;
   }else{
@@ -582,18 +589,18 @@ $('#areas').addEventListener('click',e=>{const b=e.target.closest('button');if(!
 $('#correas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.correa=b.dataset.c;S.tipo=null;S.origen=null;S.draft=[];renderAll();});
 
 function renderOrigen(){
-  const ok=S.task==='cambio'&&!!S.correa; $('#p-origen').hidden=!ok; if(!ok)return;
+  const ok=(S.task==='progr'||S.task==='noprog')&&!!S.correa; $('#p-origen').hidden=!ok; if(!ok)return;
   $('#origen-sel').innerHTML=`<button class="chip" aria-pressed="${S.origen==='pendiente'}" data-o="pendiente">Pendiente<span class="m">ya detectado</span></button><button class="chip" aria-pressed="${S.origen==='adicional'}" data-o="adicional">Adicional<span class="m">nuevo hallazgo</span></button>`;
   $('#origen-legend').textContent=S.origen==='pendiente'
     ?'Vas a cerrar un hallazgo que ya quedó registrado en una inspección.'
     :S.origen==='adicional'
-    ?'Vas a registrar un cambio que no venía de una inspección previa. La falla puede quedar sin especificar si fue preventivo.'
-    :'El cambio puede nacer de un hallazgo ya visto o de una condición vista en el momento.';
+    ?'Vas a registrar un hallazgo nuevo, que no venía de una inspección previa. La falla puede quedar sin especificar si fue preventivo.'
+    :'¿Este cambio cierra un hallazgo ya visto, o nace de una condición nueva?';
 }
 $('#origen-sel').addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b)return;S.origen=b.dataset.o;S.tipo=null;S.draft=[];renderAll();});
 
 function renderCambioPend(){
-  const ok=S.task==='cambio'&&S.origen==='pendiente'&&!!S.correa; $('#p-cambio-pend').hidden=!ok; if(!ok)return;
+  const ok=(S.task==='progr'||S.task==='noprog')&&S.origen==='pendiente'&&!!S.correa; $('#p-cambio-pend').hidden=!ok; if(!ok)return;
   const orden={ALTA:0,MODERADA:1,LEVE:2};
   const L=DB.filter(r=>r.estado==='PENDIENTE'&&r.area===S.area&&r.correa===S.correa).sort((a,b)=>a.limite.localeCompare(b.limite)||orden[a.crit]-orden[b.crit]);
   $('#cambio-pend-list').innerHTML=L.length?L.map(r=>{
@@ -605,11 +612,12 @@ function renderCambioPend(){
   }).join(''):`<li class="empty" style="border:0;background:none">No hay hallazgos pendientes para este equipo.<br><button class="link" data-a="go-adicional">Registrar como adicional</button></li>`;
 }
 $('#cambio-pend-list').addEventListener('click',e=>{
-  const b=e.target.closest('[data-uid]'); if(b){openCierreSheet(b.dataset.uid);return;}
+  const b=e.target.closest('[data-uid]'); if(b){openCierreSheet(b.dataset.uid, tipoIntervencion());return;}
   const g=e.target.closest('[data-a="go-adicional"]'); if(g){S.origen='adicional';renderAll();}
 });
-function showStationFlow(){return (S.task==='insp'&&!!S.correa)||(S.task==='cambio'&&S.origen==='adicional'&&!!S.correa);}
-function modoCambio(){return S.task==='cambio'&&S.origen==='adicional';}
+function showStationFlow(){return (S.task==='insp'&&!!S.correa)||((S.task==='progr'||S.task==='noprog')&&S.origen==='adicional'&&!!S.correa);}
+function modoCambio(){return S.task==='progr'||S.task==='noprog';}
+function tipoIntervencion(){return S.task==='progr'?'PROGRAMADA':S.task==='noprog'?'NO_PROGRAMADA':'';}
 function numberPanels(){
   const order=['p-area','p-origen','p-cambio-pend','p-ubic','p-tipo','p-est']; let n=0;
   order.forEach(id=>{const el=document.getElementById(id); if(!el||el.hidden)return; const b=el.querySelector('h2 .n'); if(b){n++;b.textContent=n;}});
@@ -711,7 +719,8 @@ function renderStation(){
   $('#stage-body').innerHTML=svg+`<button class="struct-btn ${dE?dE.crit:''}" data-pos="EST">${dE?'Estructura marcada'+(dE.mf?' ('+dE.mf+')':''):'Falla de estación / estructura'}</button>`;
   $('#draft').innerHTML=S.draft.map((d,i)=>{
     const mfTxt=d.mf?`${esc(d.mf)} ${esc(MFmap[d.mf].modo)}`:'Sin falla específica';
-    const tail=(d.estado==='ADICIONAL'||d.estado==='CAMBIADO')?`${esc(d.ejecutor||'')} · ${fmtCL(d.fechaCambio||d.fecha)}`:`${esc(d.plazo)}`;
+    const tiLabel=d.tipoInt==='PROGRAMADA'?'Programado':d.tipoInt==='NO_PROGRAMADA'?'No programado':'';
+    const tail=(d.estado==='ADICIONAL'||d.estado==='CAMBIADO')?`${tiLabel?tiLabel+' · ':''}${esc(d.ejecutor||'')} · ${fmtCL(d.fechaCambio||d.fecha)}`:`${esc(d.plazo)}`;
     return `<li><span class="pid">${esc(d.idPolin)}</span><span class="what">${mfTxt}<br><span class="crit ${d.crit}">${d.crit}</span> ${tail}</span><button class="x" data-i="${i}" aria-label="Quitar">×</button></li>`;
   }).join('');
   const cm=modoCambio(); const b=$('#save'); b.disabled=!S.draft.length;
@@ -725,7 +734,7 @@ $('#save').addEventListener('click',()=>{
   const n=S.draft.length; const cm=modoCambio();
   S.draft.forEach((d,i)=>DB.push(completar(d,i)));
   save(); S.draft=[];
-  if(esMesa()){S.nest=Math.min(S.nest+1,maxNest());}else{S.est=Math.min(S.est+1,MAX_EST);}
+  if(esMesa()){S.nest=Math.min(S.nest+1,maxNest());}else{S.est=Math.min(S.est+1,eqMaxFor(S.area,S.correa).max);}
   renderUbic();renderStation();updateBadge();renderPend();renderCambioPend();
   toast(`${cm?'Cambio registrado':'Inspección guardada'}: ${n} hallazgo${n>1?'s':''}`);
 });
@@ -804,9 +813,13 @@ $('#sheet').addEventListener('click',e=>{
       if(!F.crit){toast('Elige la criticidad');return;}
       if(!F.ejecutor){toast('Escribe quién ejecuta el cambio');return;}
       if(!F.foto){toast('Adjunta una foto del cambio');return;}
-    }else if(F.estado==='CAMBIADO'&&!F.ejecutor){toast('Elige quién ejecutó el cambio');return;}
+    }else{
+      if(!F.inspector){toast('Escribe el nombre del inspector');return;}
+      if(F.estado==='CAMBIADO'&&!F.ejecutor){toast('Elige quién ejecutó el cambio');return;}
+    }
     const d={area:F.area,correa:F.correa,tipoEst:F.tipoEst,pos:F.pos,mesa:F.mesa,nest:F.nest,est:F.est,manual:F.manual,mf:F.mf,crit:F.crit,
       estado:cm?'ADICIONAL':F.estado,
+      tipoInt:cm?tipoIntervencion():'',
       ejecutor:F.ejecutor,obs:F.obs,foto:F.foto,photoUrl:F.photoUrl||'',inspector:cm?'':F.inspector,
       fecha:today(),fechaCambio:cm?(F.fecha||today()):(F.estado==='CAMBIADO'?today():'')};
     if(d.mesa==null){delete d.mesa;delete d.nest;} if(d.est==null)delete d.est;
@@ -854,11 +867,13 @@ function renderPend(){
 }
 $('#f-correa').addEventListener('change',renderPend);
 $('#f-crit').addEventListener('change',renderPend);
-function openCierreSheet(uid){
+function openCierreSheet(uid, tipoForced){
   const r=DB.find(x=>x.uid===uid); if(!r)return;
-  F={cambio:r, foto:false, photoUrl:''};
+  F={cambio:r, foto:false, photoUrl:'', tipoInt:tipoForced||''};
+  const askTipo=!tipoForced;
   openSheet(`<div class="sheet-head"><div><div class="pid" id="sh-pid">${esc(r.correa)} ${esc(r.idPolin)}</div><div class="sub">${r.mf?esc(r.mf)+' '+esc(MFmap[r.mf].modo):'Sin falla específica'} · <span class="crit ${r.crit}">${r.crit}</span></div></div><button class="close" data-cc="close" aria-label="Cerrar">×</button></div>
   <p class="hint" style="margin-top:10px">Detectado el ${fmtCL(r.fecha)}${r.inspector?' por '+esc(r.inspector):''}. Plazo: ${esc(r.plazo)}.</p>
+  ${askTipo?`<div class="block"><span class="lbl">Tipo de intervención</span><div class="crit-seg"><button data-ti="PROGRAMADA" aria-pressed="${F.tipoInt==='PROGRAMADA'}">Programado</button><button data-ti="NO_PROGRAMADA" aria-pressed="${F.tipoInt==='NO_PROGRAMADA'}">No programado</button></div></div>`:`<p class="hint">Se registra como <b>${tipoForced==='PROGRAMADA'?'cambio programado':'cambio no programado'}</b>.</p>`}
   <div class="block"><label for="c-ejec">Quién ejecuta el cambio</label><input class="field" id="c-ejec" list="dl-ejec" placeholder="Nombre" value="${esc(r.ejecutor||'')}"></div>
   <div class="block"><label for="c-fecha">Fecha del cambio</label><input type="date" class="field" id="c-fecha" value="${today()}" max="${today()}"></div>
   <div class="block"><label class="check"><input type="checkbox" id="c-est">Se cambió la estación completa</label></div>
@@ -866,13 +881,19 @@ function openCierreSheet(uid){
   <div class="block"><label for="c-obs">Observación</label><textarea class="field" id="c-obs" rows="2"></textarea></div>
   <button class="primary" data-cc="ok">Registrar cambio</button>`);
 }
+$('#sheet').addEventListener('click',e=>{
+  const b=e.target.closest('[data-ti]'); if(!b||!F||!F.cambio)return;
+  F.tipoInt=b.dataset.ti;
+  document.querySelectorAll('[data-ti]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.ti===F.tipoInt)));
+});
 $('#pend').addEventListener('click',e=>{const b=e.target.closest('[data-uid]'); if(b)openCierreSheet(b.dataset.uid);});
 document.getElementById('sheet').addEventListener('click',e=>{
   const b=e.target.closest('[data-cc]'); if(!b||!F||!F.cambio)return;
   if(b.dataset.cc==='close'){closeSheet();return;}
+  if(!F.tipoInt){toast('Elige si es un cambio programado o no programado');return;}
   const ej=$('#c-ejec').value.trim(); if(!ej){toast('Escribe quién ejecuta el cambio');return;}
   if(!F.foto){toast('Adjunta una foto del cambio');return;}
-  const r=F.cambio; r.estado='CAMBIADO'; r.ejecutor=ej; r.fechaCambio=$('#c-fecha').value||today(); r.photoUrl=F.photoUrl||'';
+  const r=F.cambio; r.estado='CAMBIADO'; r.tipoInt=F.tipoInt; r.ejecutor=ej; r.fechaCambio=$('#c-fecha').value||today(); r.photoUrl=F.photoUrl||'';
   const extra=[$('#c-est').checked?'Se cambia estación completa':'',$('#c-obs').value.trim()].filter(Boolean).join('. ');
   if(extra)r.obs=(r.obs?r.obs+'. ':'')+extra;
   save(); closeSheet(); renderPend(); renderCambioPend(); updateBadge(); toast('Cambio registrado: '+r.idPolin);
@@ -935,15 +956,23 @@ function renderMapa(){
   $('#by-correa').innerHTML=allC.map(c=>`<li><span>${esc(c)}</span><span class="bar" style="width:${((cnt[c]||0)/mx*100).toFixed(1)}%;${c===correa?'background:var(--safety)':''}"></span><span class="v">${cnt[c]||0}</span></li>`).join('');
   $('#by-title').textContent='Hallazgos por equipo en '+mArea;
   // Pareto
-  const pm={}; DB.forEach(r=>{if(r.mf)pm[r.mf]=(pm[r.mf]||0)+1;});
+  $('#pareto-title').textContent='Modos de falla más frecuentes en '+mArea;
+  const pm={}; DB.forEach(r=>{if(r.mf&&r.area===mArea)pm[r.mf]=(pm[r.mf]||0)+1;});
   const top=Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,8); const mp=top.length?top[0][1]:1;
   $('#pareto').innerHTML=top.map(([k,v])=>`<li><span>${k} ${esc(MFmap[k].modo)}</span><span class="bar" style="width:${(v/mp*100).toFixed(1)}%"></span><span class="v">${v}</span></li>`).join('')||'<li class="empty">Sin datos</li>';
 
   // Reincidencias
   const g={}; DB.forEach(r=>{const k=r.area+' '+r.correa+' '+r.idPolin;(g[k]=g[k]||[]).push(r);});
-  const rein=Object.entries(g).map(([k,rs])=>{rs.sort((a,b)=>a.fecha.localeCompare(b.fecha));
-    let best=0; for(let i=1;i<rs.length;i++){const dd=(parseD(rs[i].fecha)-parseD(rs[i-1].fecha))/86400000; if(dd<=90)best=Math.max(best,rs.length);} return {k,rs,best};})
-    .filter(x=>x.best>=2).sort((a,b)=>b.rs.length-a.rs.length).slice(0,10);
+  const rein=Object.entries(g).map(([k,rs])=>{
+    rs.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    let bestWin=[rs[0]],j=0;
+    for(let i=0;i<rs.length;i++){
+      while(parseD(rs[i].fecha)-parseD(rs[j].fecha)>90*86400000)j++;
+      const win=rs.slice(j,i+1);
+      if(win.length>bestWin.length)bestWin=win;
+    }
+    return {k,rs:bestWin};})
+    .filter(x=>x.rs.length>=2).sort((a,b)=>b.rs.length-a.rs.length).slice(0,10);
   $('#reinc').innerHTML=rein.length?rein.map(x=>`<li><b>${esc(x.k.split(' ').slice(1).join(' '))}</b>: ${x.rs.length} hallazgos (${x.rs.map(r=>(r.mf||'cambio')+' el '+fmtCL(r.fecha)).join(', ')})</li>`).join(''):'<li>Sin reincidencias.</li>';
 }
 $('#m-correa').addEventListener('change',renderMapa);
@@ -956,7 +985,7 @@ $('#demo-on').addEventListener('click',()=>{
   if(DB.some(r=>r.demo)){toast('Los datos demo ya están cargados');return;}
   const R=rnd(20260924); const pick=a=>a[Math.floor(R()*a.length)];
   const mfW=['MF-01','MF-01','MF-03','MF-03','MF-06','MF-06','MF-07','MF-12','MF-12','MF-12','MF-08','MF-11','MF-02','MF-13','MF-14','MF-05'];
-  const mfE=['MF-15','MF-16','MF-09','MF-19','MF-20','MF-17'];
+  const mfE=['MF-15','MF-16','MF-09','MF-19','MF-20','MF-17','MF-21'];
   let i=0;
   Object.entries(AREAS).flatMap(([a,cs])=>cs.map(c=>[a,c])).forEach(([a,c],ci)=>{
     const n=4+Math.floor(R()*(c.startsWith('CV')?24:8)); const mesa=POR_MESA.has(c);
@@ -983,12 +1012,12 @@ $('#demo-off').addEventListener('click',()=>{DB=DB.filter(r=>!r.demo);save();ref
 
 /* Exportación en formato planilla */
 $('#export').addEventListener('click',()=>{
-  const H=['N°','ÁREA','EQUIPO','FECHA','SEM','ESTACIÓN','MESA','OTRO TIPO DE ESTACIÓN','TIPO','N° EST','POSICIÓN','ID POLÍN','CÓD. FALLA','MODO DE FALLA','CRITICIDAD','PLAZO','FECHA LÍMITE','ESTADO','EJECUTOR INSPECCION','EJECUTOR CAMBIO','FECHA CAMBIO','OBSERVACIÓN'];
+  const H=['N°','ÁREA','EQUIPO','FECHA','SEM','ESTACIÓN','MESA','OTRO TIPO DE ESTACIÓN','TIPO','N° EST','POSICIÓN','ID POLÍN','CÓD. FALLA','MODO DE FALLA','CRITICIDAD','PLAZO','FECHA LÍMITE','ESTADO','TIPO INTERVENCIÓN','EJECUTOR INSPECCION','EJECUTOR CAMBIO','FECHA CAMBIO','OBSERVACIÓN'];
   const posTxt={IZQ:'IZQUIERDO',CEN:'CENTRAL',DER:'DERECHO',GIZ:'GUÍA IZQUIERDA',GDE:'GUÍA DERECHA',REC:'RETORNO RECTO',EST:'ESTACIÓN COMPLETA'};
   const rows=DB.slice().sort((a,b)=>a.area.localeCompare(b.area)||a.correa.localeCompare(b.correa)||a.fecha.localeCompare(b.fecha)).map((r,i)=>{
     const t=tipoDe(r.tipoEst);
     const otro=['GUI','IMP','RTR','CAB','STR','OTR'].includes(r.tipoEst)?(r.tipoEst==='OTR'?r.manual||'Otra':t.nombre):'';
-    return [i+1,r.area,r.correa,fmtCL(r.fecha),r.sem,r.est??'',r.mesa??'',otro,t.letra==='R'?'RETORNO':'CARGA',r.nest??'',posTxt[r.pos],r.idPolin,r.mf||'',r.mf?MFmap[r.mf].modo:'',r.crit,r.plazo,fmtCL(r.limite),r.estado,r.inspector||'',r.ejecutor||'',r.fechaCambio?fmtCL(r.fechaCambio):'',r.obs||''];
+    return [i+1,r.area,r.correa,fmtCL(r.fecha),r.sem,r.est??'',r.mesa??'',otro,t.letra==='R'?'RETORNO':'CARGA',r.nest??'',posTxt[r.pos],r.idPolin,r.mf||'',r.mf?MFmap[r.mf].modo:'',r.crit,r.plazo,fmtCL(r.limite),r.estado,r.tipoInt||'',r.inspector||'',r.ejecutor||'',r.fechaCambio?fmtCL(r.fechaCambio):'',r.obs||''];
   });
   const csv='\ufeff'+[H,...rows].map(a=>a.map(v=>{v=String(v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(';')).join('\r\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
@@ -998,8 +1027,7 @@ $('#export').addEventListener('click',()=>{
 
 /* ================= Catálogo ================= */
 function renderCat(){
-  $('#cat').innerHTML=MF.map(m=>`<li><div class="h"><span class="c">${m.cod}</span><span class="t">${esc(m.modo)}</span><span class="lvl">${m.nivel==='E'?'Estructura':'Polín'}</span><span class="crit ${m.crit}">${m.crit}</span></div><p>${esc(m.det)}</p></li>`).join('')+
-  `<li class="prop"><div class="h"><span class="c">MF-21</span><span class="t">Cadena con defecto de diseño del proveedor</span><span class="lvl">Propuesta</span></div><p>Separar de MF-19 para poder respaldar reclamos de garantía. Pendiente de validar con el especialista.</p></li>`;
+  $('#cat').innerHTML=MF.map(m=>`<li${m.cod==='MF-21'?' class="prop"':''}><div class="h"><span class="c">${m.cod}</span><span class="t">${esc(m.modo)}</span><span class="lvl">${m.nivel==='E'?'Estructura':'Polín'}${m.cod==='MF-21'?' · Nuevo':''}</span><span class="crit ${m.crit}">${m.crit}</span></div><p>${esc(m.det)}${m.cod==='MF-21'?' Separado de MF-19; pendiente de validar con el especialista.':''}</p></li>`).join('');
 }
 
 /* ================= Configuración ================= */
