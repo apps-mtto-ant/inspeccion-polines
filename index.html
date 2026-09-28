@@ -632,7 +632,8 @@ $('#areas').addEventListener('click',e=>{const b=e.target.closest('button');if(!
 $('#correas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.correa=b.dataset.c;S.familia=null;S.tipo=null;S.origen=null;S.draft=[];renderAll();});
 
 function renderOrigen(){
-  const ok=(S.task==='progr'||S.task==='noprog')&&!!S.correa; $('#p-origen').hidden=!ok; if(!ok)return;
+  if(S.task==='progr'&&S.correa)S.origen='pendiente'; // BUG-04: Cambio Programado nace solo de un hallazgo pendiente (sin elección Pendiente | Adicional)
+  const ok=S.task==='noprog'&&!!S.correa; $('#p-origen').hidden=!ok; if(!ok)return;
   $('#origen-sel').innerHTML=`<button class="chip" aria-pressed="${S.origen==='pendiente'}" data-o="pendiente">Pendiente<span class="m">ya detectado</span></button><button class="chip" aria-pressed="${S.origen==='adicional'}" data-o="adicional">Adicional<span class="m">nuevo hallazgo</span></button>`;
   $('#origen-legend').textContent=S.origen==='pendiente'
     ?'Vas a cerrar un hallazgo que ya quedó registrado en una inspección.'
@@ -652,13 +653,13 @@ function renderCambioPend(){
     return `<li class="${r.crit}"><div class="l1"><span class="pid">${esc(r.idPolin)}</span><span class="cv">${esc(r.correa)}</span></div>
     <div class="l2">${r.mf?esc(r.mf)+' '+esc(MFmap[r.mf].modo):'Sin falla específica'}<br><span class="crit ${r.crit}">${r.crit}</span> ${esc(r.plazo)}</div>
     <div class="l3"><span>${txt}. Detectado ${fmtCL(r.fecha)}${r.inspector?' por '+esc(r.inspector):''}</span><button class="secondary" data-uid="${r.uid}">Cerrar cambio</button></div></li>`;
-  }).join(''):`<li class="empty" style="border:0;background:none">No hay hallazgos pendientes para este equipo.<br><button class="link" data-a="go-adicional">Registrar como adicional</button></li>`;
+  }).join(''):`<li class="empty" style="border:0;background:none">No hay hallazgos pendientes para este equipo.${S.task==='noprog'?'<br><button class="link" data-a="go-adicional">Registrar como adicional</button>':''}</li>`;
 }
 $('#cambio-pend-list').addEventListener('click',e=>{
   const b=e.target.closest('[data-uid]'); if(b){openCierreSheet(b.dataset.uid, tipoIntervencion());return;}
   const g=e.target.closest('[data-a="go-adicional"]'); if(g){S.origen='adicional';renderAll();}
 });
-function showStationFlow(){return (S.task==='insp'&&!!S.correa)||((S.task==='progr'||S.task==='noprog')&&S.origen==='adicional'&&!!S.correa);}
+function showStationFlow(){return (S.task==='insp'&&!!S.correa)||(S.task==='noprog'&&S.origen==='adicional'&&!!S.correa);}
 function modoCambio(){return S.task==='progr'||S.task==='noprog';}
 function tipoIntervencion(){return S.task==='progr'?'PROGRAMADA':S.task==='noprog'?'NO_PROGRAMADA':'';}
 function numberPanels(){
@@ -833,7 +834,7 @@ function openFicha(pos){
 }
 function drawFicha(){
   const sh=$('#sheet'), keepTop=$('#sheet').classList.contains('on')?sh.scrollTop:0, ml=document.querySelector('.mf-list'), keepMl=ml?ml.scrollTop:0;
-  const nivel=F.verNivel||(F.pos==='EST'?'E':'P');
+  const nivel=(F.pos==='EST'?'E':'P'); // BUG-03: el componente seleccionado determina de forma exclusiva la familia de MF
   const list=MF.filter(m=>m.nivel===nivel);
   const m=F.mf?MFmap[F.mf]:null;
   const pz=F.crit?plazo(F.crit,today()):null;
@@ -845,7 +846,6 @@ function drawFicha(){
   <div class="block"><span class="lbl">Modo de falla ${nivel==='E'?'(estructura)':'(polín)'}${cm?' — opcional':''}</span>
     <div class="mf-list">${list.map(x=>`<button class="mf" aria-pressed="${F.mf===x.cod}" data-mf="${x.cod}"><span class="c">${x.cod}</span><span class="t">${esc(x.modo)}</span></button>`).join('')}</div>
     ${m?`<div class="detail">${esc(m.det)}</div>`:cm?`<p class="hint">Sin código: cambio preventivo, no nació de una falla puntual.</p>`:''}
-    <button class="link" data-a="swap">${nivel==='E'?'Ver fallas de polín':'Ver fallas de estructura'}</button>
   </div>
   <div class="block"><span class="lbl">Criticidad</span>
     <div class="crit-seg">${['ALTA','MODERADA','LEVE'].map(c=>`<button data-c="${c}" aria-pressed="${F.crit===c}">${c==='MODERADA'?'Moderada':c==='ALTA'?'Alta':'Leve'}</button>`).join('')}</div>
@@ -883,7 +883,6 @@ $('#sheet').addEventListener('click',e=>{
   if(t.dataset.c){F.crit=t.dataset.c;F.critManual=true;keepInputs();drawFicha();return;}
   const a=t.dataset.a;
   if(a==='close'){closeSheet();}
-  if(a==='swap'){keepInputs(); F.verNivel = F._nivelVista==='E' ? 'P' : 'E'; drawFicha();}
   if(a==='add'){
     keepInputs();
     const cm=modoCambio();
@@ -1023,7 +1022,7 @@ function renderMapa(){
   });
   $('#hm').innerHTML=h+'</tbody>';
   $('#legend').innerHTML='Menos <span class="sw" style="background:#EEF0F2"></span>'+['#FCE7A6','#F7C35C','#EE8F2F','#D9552A','#B0241F'].map(c=>`<span class="sw" style="background:${c}"></span>`).join('')+' Más';
-  $('#hm-hint').textContent=(mesa?'Columnas: número de mesa.':'Columnas: tramos de 10 estaciones, el número indica la primera estación del tramo.')+(eq.confirmed?'':' Escala provisoria: falta confirmar el largo real de esta correa.');
+  $('#hm-hint').textContent=(mesa?'Columnas: número de mesa.':'Columnas: tramos de 10 estaciones, el número indica la primera estación del tramo.')+(eq.confirmed?'':' Escala provisoria: falta confirmar número real de mesas / estaciones.');
 
   // KPIs
   const pend=DB.filter(r=>r.estado==='PENDIENTE');
